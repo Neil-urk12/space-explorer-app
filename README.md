@@ -22,11 +22,11 @@ Copy `.env.example` to `.env` and set a key from [api.nasa.gov](https://api.nasa
 
 | Location               | Command                              | Notes                        |
 | ---------------------- | ------------------------------------ | ---------------------------- |
-| `space_explorer/`      | `npx expo start --port 8081 --clear` | Start Metro                  |
-| `Space Explorer WDEV/` | `npm start`                          | Start from the parent folder |
-| `Space Explorer WDEV/` | `npm run web`                        | Open the web preview         |
-| `Space Explorer WDEV/` | `npm run android`                    | Open Android                 |
-| `Space Explorer WDEV/` | `npm run ios`                        | Open iOS                     |
+| `space_explorer/ `      | `npx expo start --port 8081 --clear` | Start Metro                  |
+| `Space Explorer/ ` | `npm start`                          | Start from the parent folder |
+| `Space Explorer/ ` | `npm run web`                        | Open the web preview         |
+| `Space Explorer/ ` | `npm run android`                    | Open Android                 |
+| `Space Explorer/ ` | `npm run ios`                        | Open iOS                     |
 
 
 After Metro starts:
