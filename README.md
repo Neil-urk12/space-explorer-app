@@ -1,56 +1,56 @@
-# Welcome to your Expo app 👋
+# Space Explorer
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Space Explorer is an Expo (React Native) app for NASA Astronomy Picture of the Day. The full UI covers a welcome orbit scene, Home, Gallery, Search, plate details, and a Saved vault. Dark and Light appearance stay selected after refresh.
 
-## Get started
+Home shows today’s APOD with recent nights. Gallery and Search filter galaxies, nebulae, planets, Earth, and the Moon. Details open credit, explanation, Keep / Share / Save, and neighboring nights.
 
-1. Install dependencies
+## Setup
 
-   ```bash
-   npm install
-   ```
+Copy `.env.example` to `.env` and set a key from [api.nasa.gov](https://api.nasa.gov).
 
-2. Start the app
 
-   ```bash
-   npx expo start
-   ```
+| Location          | Command                      | Notes                               |
+| ----------------- | ---------------------------- | ----------------------------------- |
+| `space_explorer/` | `npm install`                | Install app dependencies            |
+| `space_explorer/` | copy `.env.example` → `.env` | `EXPO_PUBLIC_NASA_API_KEY` for APOD |
 
-In the output, you'll find options to open the app in a
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+## Run
 
-When you're ready, run:
 
-```bash
-npm run reset-project
-```
+| Location               | Command                              | Notes                        |
+| ---------------------- | ------------------------------------ | ---------------------------- |
+| `space_explorer/`      | `npx expo start --port 8081 --clear` | Start Metro                  |
+| `Space Explorer WDEV/` | `npm start`                          | Start from the parent folder |
+| `Space Explorer WDEV/` | `npm run web`                        | Open the web preview         |
+| `Space Explorer WDEV/` | `npm run android`                    | Open Android                 |
+| `Space Explorer WDEV/` | `npm run ios`                        | Open iOS                     |
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-### Other setup steps
+After Metro starts:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
 
-## Learn more
+| Key | Notes   |
+| --- | ------- |
+| `a` | Android |
+| `i` | iOS     |
+| `w` | Web     |
+| `r` | Reload  |
 
-To learn more about developing your project with Expo, look at the following resources:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Use Expo Go, an emulator, a simulator, or the web preview.
 
-## Join the community
+## Tech stack
 
-Join our community of developers creating universal apps.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+| Layer         | Technologies                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| Languages     | TypeScript, JavaScript                                                                                 |
+| App           | React Native 0.86, React 19, Expo SDK 57, Expo Router                                                  |
+| UI and motion | Space Grotesk, expo-image, expo-linear-gradient, react-native-reanimated, react-native-gesture-handler |
+| Tooling       | npm, Metro bundler, TypeScript                                                                         |
+| Data          | NASA APOD (`EXPO_PUBLIC_NASA_API_KEY`)                                                                 |
+
+
