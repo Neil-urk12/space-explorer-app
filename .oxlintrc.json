@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "unicorn",
+    "typescript",
+    "oxc",
+    "react"
+  ],
+  "rules": {
+    "react/immutability": "off",
+    "react/rules-of-hooks": "error"
+  },
+  "ignorePatterns": [
+    "dist/**",
+    ".expo/**",
+    "web-build/**",
+    "node_modules/**"
+  ]
+}
