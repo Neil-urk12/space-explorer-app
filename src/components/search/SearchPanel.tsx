@@ -56,12 +56,14 @@ export function SearchPanel({ query, onQuery, media, onMedia, category, onCatego
 
   return (
     <View>
-      <Type variant="micro" color={colors.gold}>
-        Search / Filter
-      </Type>
-      <Type variant="headline" style={{ marginTop: 10 }}>
-        Find a night in the archive.
-      </Type>
+      <View style={{ paddingRight: 36 }}>
+        <Type variant="micro" color={colors.gold}>
+          Search / Filter
+        </Type>
+        <Type variant="headline" style={{ marginTop: 10 }}>
+          Find a night in the archive.
+        </Type>
+      </View>
       <Type variant="body" style={{ marginTop: 10, marginBottom: 18 }}>
         Filter by title, media, sky type, or lock a calendar date from this archive.
       </Type>

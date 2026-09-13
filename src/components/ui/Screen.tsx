@@ -30,8 +30,7 @@ export function Screen({
   const { colors } = useTheme();
   const bottomGap = (tabInset ? layout.tabBar + 22 : 16) + insets.bottom;
   const padding = {
-    paddingLeft: padded ? 20 : 0,
-    paddingRight: padded ? (settings ? 56 : 20) : 0,
+    paddingHorizontal: padded ? 20 : 0,
     paddingTop: Math.max(insets.top, 12),
     paddingBottom: bottomGap,
   };

@@ -14,12 +14,14 @@ export default function HomeScreen() {
 
   return (
     <Screen scroll>
-      <Type variant="micro" color={colors.gold}>
-        Home
-      </Type>
-      <Type variant="headline" style={{ marginTop: 8 }}>
-        Tonight’s sky, held still.
-      </Type>
+      <View style={{ paddingRight: 36 }}>
+        <Type variant="micro" color={colors.gold}>
+          Home
+        </Type>
+        <Type variant="headline" style={{ marginTop: 8 }}>
+          Tonight’s sky, held still.
+        </Type>
+      </View>
       <Type variant="body" style={{ marginTop: 8, marginBottom: 18 }}>
         A quiet list of NASA Astronomy Pictures. Open any plate for the full story.
       </Type>

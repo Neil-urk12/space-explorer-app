@@ -29,12 +29,14 @@ export default function GalleryScreen() {
 
   return (
     <Screen scroll>
-      <Type variant="micro" color={colors.gold}>
-        Gallery
-      </Type>
-      <Type variant="headline" style={{ marginTop: 10 }}>
-        A constellation of plates.
-      </Type>
+      <View style={{ paddingRight: 36 }}>
+        <Type variant="micro" color={colors.gold}>
+          Gallery
+        </Type>
+        <Type variant="headline" style={{ marginTop: 10 }}>
+          A constellation of plates.
+        </Type>
+      </View>
       <Type variant="body" style={{ marginTop: 10, marginBottom: 18 }}>
         Staggered NASA stills. Tap a tile for credit, story, and save actions.
       </Type>

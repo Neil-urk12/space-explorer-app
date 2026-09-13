@@ -12,12 +12,14 @@ export default function SavedScreen() {
 
   return (
     <Screen scroll>
-      <Type variant="micro" color={colors.gold}>
-        Favorites
-      </Type>
-      <Type variant="headline" style={{ marginTop: 10 }}>
-        Nights you held onto.
-      </Type>
+      <View style={{ paddingRight: 36 }}>
+        <Type variant="micro" color={colors.gold}>
+          Favorites
+        </Type>
+        <Type variant="headline" style={{ marginTop: 10 }}>
+          Nights you held onto.
+        </Type>
+      </View>
       <Type variant="body" style={{ marginTop: 10, marginBottom: 22 }}>
         Kept plates live on this device for the session. Open one to share or save the still.
       </Type>
