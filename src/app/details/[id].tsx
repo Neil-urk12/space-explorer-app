@@ -28,7 +28,7 @@ export default function DetailsScreen() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const favoriteItem = id ? favoriteItems.find((favorite) => favorite.id === id) : undefined;
-  const item = contextItem || favoriteItem || fetchedItem;
+  const item = contextItem || favoriteItem || (fetchedItem?.id === id ? fetchedItem : null);
 
   useEffect(() => {
     if (contextItem || favoriteItem || !favoritesHydrated || !id) return;
