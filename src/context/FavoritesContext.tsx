@@ -1,11 +1,14 @@
 import { CATALOG } from '@/data/catalog';
 import { SpaceItem } from '@/types/space';
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-const SEEDED = ['2026-09-11', '2026-08-12'];
+const FAVORITES_STORAGE_KEY = '@space_explorer/favorites';
+const SEEDED_IDS = ['2026-09-11', '2026-08-12'];
 
 type FavoritesContextValue = {
   items: SpaceItem[];
+  hydrated: boolean;
   isFavorite: (id: string) => boolean;
   toggleFavorite: (item: SpaceItem) => void;
 };
@@ -13,20 +16,49 @@ type FavoritesContextValue = {
 const FavoritesContext = createContext<FavoritesContextValue | null>(null);
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
-  const [ids, setIds] = useState<string[]>(SEEDED);
-
-  const items = useMemo(
-    () => ids.map((id) => CATALOG.find((item) => item.id === id)).filter((item): item is SpaceItem => Boolean(item)),
-    [ids],
+  const [items, setItems] = useState<SpaceItem[]>(() =>
+    SEEDED_IDS.map((id) => CATALOG.find((c) => c.id === id)).filter((c): c is SpaceItem => Boolean(c)),
   );
+  const [hydrated, setHydrated] = useState(false);
 
-  const isFavorite = useCallback((id: string) => ids.includes(id), [ids]);
+  useEffect(() => {
+    let cancelled = false;
+    AsyncStorage.getItem(FAVORITES_STORAGE_KEY)
+      .then((raw) => {
+        if (cancelled) return;
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              setItems(parsed);
+            }
+          } catch {}
+        }
+        setHydrated(true);
+      })
+      .catch(() => {
+        if (!cancelled) setHydrated(true);
+      });
 
-  const toggleFavorite = useCallback((item: SpaceItem) => {
-    setIds((current) => (current.includes(item.id) ? current.filter((id) => id !== item.id) : [item.id, ...current]));
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const value = useMemo(() => ({ items, isFavorite, toggleFavorite }), [items, isFavorite, toggleFavorite]);
+  const isFavorite = useCallback((id: string) => items.some((item) => item.id === id), [items]);
+
+  const toggleFavorite = useCallback((item: SpaceItem) => {
+    if (!hydrated) return;
+
+    setItems((current) => {
+      const exists = current.some((fav) => fav.id === item.id);
+      const next = exists ? current.filter((fav) => fav.id !== item.id) : [item, ...current];
+      AsyncStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+  }, [hydrated]);
+
+  const value = useMemo(() => ({ items, hydrated, isFavorite, toggleFavorite }), [items, hydrated, isFavorite, toggleFavorite]);
 
   return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;
 }
