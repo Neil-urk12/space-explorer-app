@@ -2,24 +2,43 @@ import { SpaceCard } from '@/components/media/SpaceCard';
 import { SearchPanel } from '@/components/search/SearchPanel';
 import { Screen } from '@/components/ui/Screen';
 import { Type } from '@/components/ui/Type';
-import { filterCatalog } from '@/data/catalog';
+import { useApod } from '@/context/ApodContext';
 import { useTheme } from '@/context/ThemeContext';
-import { CategoryFilter, MediaFilter } from '@/types/space';
+import { CATALOG } from '@/data/catalog';
+import { CategoryFilter, MediaFilter, SpaceItem } from '@/types/space';
 import { formatHudDate } from '@/utils/dates';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 export default function SearchScreen() {
   const { colors } = useTheme();
+  const { items: liveItems } = useApod();
   const [query, setQuery] = useState('');
   const [media, setMedia] = useState<MediaFilter>('all');
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  const matches = useMemo(
-    () => filterCatalog(query, media, category, selectedDate ?? undefined),
-    [query, media, category, selectedDate],
-  );
+  const allItems = useMemo(() => {
+    const map = new Map<string, SpaceItem>();
+    liveItems.forEach((item) => map.set(item.id, item));
+    CATALOG.forEach((item) => {
+      if (!map.has(item.id)) map.set(item.id, item);
+    });
+    return Array.from(map.values());
+  }, [liveItems]);
+
+  const availableDates = useMemo(() => new Set(allItems.map((item) => item.date)), [allItems]);
+
+  const matches = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return allItems.filter((item) => {
+      if (selectedDate && item.date !== selectedDate) return false;
+      if (media !== 'all' && item.mediaType !== media) return false;
+      if (category !== 'all' && item.category !== category) return false;
+      if (!needle) return true;
+      return `${item.title} ${item.explanation} ${item.credit}`.toLowerCase().includes(needle);
+    });
+  }, [allItems, query, media, category, selectedDate]);
 
   return (
     <Screen scroll>
@@ -32,6 +51,7 @@ export default function SearchScreen() {
         onCategory={setCategory}
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
+        availableDates={availableDates}
       />
 
       <Type variant="micro" color={colors.spark} style={{ marginTop: 28 }}>
@@ -42,7 +62,7 @@ export default function SearchScreen() {
           <SpaceCard key={item.id} item={item} />
         ))}
         {matches.length === 0 ? (
-          <Type variant="body">No plates in this static archive match those filters.</Type>
+          <Type variant="body">No plates in the archive match those filters.</Type>
         ) : null}
       </View>
     </Screen>

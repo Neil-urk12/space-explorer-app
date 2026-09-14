@@ -3,7 +3,7 @@ import { Type } from '@/components/ui/Type';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useTheme } from '@/context/ThemeContext';
 import { radius } from '@/theme';
-import { SpaceItem } from '@/types/space';
+import { previewUrl, SpaceItem } from '@/types/space';
 import { formatHudDate } from '@/utils/dates';
 import { detailsHref } from '@/utils/navigation';
 import { Image } from 'expo-image';
@@ -25,7 +25,7 @@ export function ApodHero({ item }: { item: SpaceItem }) {
         pressed && { opacity: 0.92 },
       ]}
     >
-      <Image source={{ uri: item.url }} style={StyleSheet.absoluteFill} contentFit="cover" transition={400} />
+      <Image source={{ uri: previewUrl(item) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={400} />
       <LinearGradient colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.82)']} style={StyleSheet.absoluteFill} />
       <View style={styles.top}>
         <Type variant="micro" color={colors.gold}>

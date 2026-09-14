@@ -1,14 +1,17 @@
 import { Type } from '@/components/ui/Type';
+import { useApod } from '@/context/ApodContext';
 import { useTheme } from '@/context/ThemeContext';
-import { CATALOG } from '@/data/catalog';
 import { radius } from '@/theme';
+import { SpaceItem } from '@/types/space';
 import { formatShortDate } from '@/utils/dates';
 import { detailsHref } from '@/utils/navigation';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-export function DateStrip({ activeId }: { activeId?: string }) {
+export function DateStrip({ activeId, items: propItems }: { activeId?: string; items?: SpaceItem[] }) {
   const { colors } = useTheme();
+  const { items: apodItems } = useApod();
+  const items = propItems && propItems.length > 0 ? propItems : apodItems;
 
   return (
     <View>
@@ -17,7 +20,7 @@ export function DateStrip({ activeId }: { activeId?: string }) {
         <View style={[styles.rule, { backgroundColor: colors.hairline }]} />
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-        {CATALOG.map((item) => {
+        {items.map((item) => {
           const active = item.id === activeId;
           return (
             <Pressable
