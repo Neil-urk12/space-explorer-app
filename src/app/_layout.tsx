@@ -1,4 +1,5 @@
 import { SpaceGrotesk_300Light, SpaceGrotesk_400Regular, SpaceGrotesk_500Medium, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold, useFonts } from '@expo-google-fonts/space-grotesk';
+import { ApodProvider } from '@/context/ApodContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { Stack } from 'expo-router';
@@ -23,9 +24,11 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <FavoritesProvider>
-          <ThemedStack />
-        </FavoritesProvider>
+        <ApodProvider>
+          <FavoritesProvider>
+            <ThemedStack />
+          </FavoritesProvider>
+        </ApodProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );
