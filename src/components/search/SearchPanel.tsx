@@ -32,6 +32,7 @@ type Props = {
   onCategory: (value: CategoryFilter) => void;
   selectedDate: string | null;
   onSelectDate: (value: string | null) => void;
+  availableDates?: Set<string>;
 };
 
 function nudgeMonth(iso: string, amount: number): string {
@@ -39,19 +40,34 @@ function nudgeMonth(iso: string, amount: number): string {
   date.setDate(1);
   date.setMonth(date.getMonth() + amount);
   const next = toIsoDate(date);
-  if (next < '2026-04-01' || next > '2026-09-01') return iso;
+  const now = new Date();
+  const maxMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  if (next < '2024-01-01' || next > maxMonth) return iso;
   return next;
 }
 
-export function SearchPanel({ query, onQuery, media, onMedia, category, onCategory, selectedDate, onSelectDate }: Props) {
+export function SearchPanel({
+  query,
+  onQuery,
+  media,
+  onMedia,
+  category,
+  onCategory,
+  selectedDate,
+  onSelectDate,
+  availableDates,
+}: Props) {
   const { colors } = useTheme();
-  const [monthIso, setMonthIso] = useState('2026-09-01');
+  const now = new Date();
+  const currentMonthIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const [monthIso, setMonthIso] = useState(currentMonthIso);
   const cursor = parseIsoDate(monthIso);
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   const days = daysInMonth(year, month);
   const blanks = new Date(year, month, 1).getDay();
   const cells = useMemo(() => [...Array(blanks).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)], [blanks, days]);
+  const activeDates = availableDates || CATALOG_DATES;
   const shownMonth = `${year}-${String(month + 1).padStart(2, '0')}-01`;
 
   return (
@@ -131,7 +147,7 @@ export function SearchPanel({ query, onQuery, media, onMedia, category, onCatego
         {cells.map((day, index) => {
           if (!day) return <View key={`b-${index}`} style={styles.day} />;
           const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const hasPlate = CATALOG_DATES.has(iso);
+          const hasPlate = activeDates.has(iso);
           const selected = selectedDate === iso;
           return (
             <Pressable

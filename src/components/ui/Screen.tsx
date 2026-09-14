@@ -13,6 +13,7 @@ type ScreenProps = {
   padded?: boolean;
   tabInset?: boolean;
   settings?: boolean;
+  refreshControl?: ScrollViewProps['refreshControl'];
   contentContainerStyle?: ScrollViewProps['contentContainerStyle'];
   style?: ViewStyle;
 };
@@ -23,6 +24,7 @@ export function Screen({
   padded = true,
   tabInset = true,
   settings = true,
+  refreshControl,
   contentContainerStyle,
   style,
 }: ScreenProps) {
@@ -45,7 +47,11 @@ export function Screen({
       </View>
       <View style={[styles.frame, style]}>
         {scroll ? (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[padding, contentContainerStyle]}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={[padding, contentContainerStyle]}
+            refreshControl={refreshControl}
+          >
             {children}
           </ScrollView>
         ) : (
