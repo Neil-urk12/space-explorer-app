@@ -5,6 +5,7 @@ import { Type } from '@/components/ui/Type';
 import { useApod } from '@/context/ApodContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useTheme } from '@/context/ThemeContext';
+import { getById } from '@/data/catalog';
 import { fetchApodByDate, getCachedApodItems } from '@/services/apod';
 import { radius } from '@/theme';
 import { previewUrl, SpaceItem } from '@/types/space';
@@ -22,19 +23,21 @@ export default function DetailsScreen() {
   const { getItemById, getNeighbors } = useApod();
   const contextItem = id ? getItemById(id) : undefined;
   const [fetchedItem, setFetchedItem] = useState<SpaceItem | null>(null);
-  const [loading, setLoading] = useState(false);
-  const { items: favoriteItems, hydrated: favoritesHydrated, isFavorite, toggleFavorite } = useFavorites();
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  const { items: favoriteItems, hydrated: favoritesHydrated, error: favoritesError, isFavorite, toggleFavorite } = useFavorites();
   const { colors } = useTheme();
   const [notice, setNotice] = useState<string | null>(null);
 
+  const catalogItem = id ? getById(id) : undefined;
   const favoriteItem = id ? favoriteItems.find((favorite) => favorite.id === id) : undefined;
-  const item = contextItem || favoriteItem || (fetchedItem?.id === id ? fetchedItem : null);
+  const savedItem = favoriteItem && !isCatalogItem(favoriteItem, catalogItem) ? favoriteItem : undefined;
+  const item = contextItem || savedItem || (fetchedItem?.id === id ? fetchedItem : null) || catalogItem;
 
   useEffect(() => {
-    if (contextItem || favoriteItem || !favoritesHydrated || !id) return;
+    if (contextItem || savedItem) return;
+    if ((!favoritesHydrated && !favoritesError) || !id) return;
 
     let cancelled = false;
-    setLoading(true);
     getCachedApodItems()
       .then((cached) => {
         const cachedItem = cached.find((candidate) => candidate.id === id);
@@ -42,19 +45,20 @@ export default function DetailsScreen() {
           if (!cancelled) setFetchedItem(cachedItem);
           return null;
         }
+        if (catalogItem) return null;
         return fetchApodByDate(id);
       })
       .then((result) => {
-        if (!cancelled && result) setFetchedItem(result);
+        if (!cancelled && result?.id === id) setFetchedItem(result);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setLoadedId(id);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [contextItem, favoriteItem, favoritesHydrated, id]);
+  }, [contextItem, savedItem, catalogItem, favoritesHydrated, favoritesError, id]);
 
   const handleShare = async () => {
     if (!item) return;
@@ -77,7 +81,7 @@ export default function DetailsScreen() {
     }
   };
 
-  if (loading || (!item && !favoritesHydrated)) {
+  if ((!item && id && loadedId !== id) || (!item && !favoritesHydrated && !favoritesError)) {
     return (
       <Screen tabInset={false}>
         <BackBar />
@@ -206,6 +210,23 @@ export default function DetailsScreen() {
         </View>
       </View>
     </Screen>
+  );
+}
+
+function isCatalogItem(item: SpaceItem | undefined, catalogItem: SpaceItem | undefined): boolean {
+  return Boolean(
+    item &&
+      catalogItem &&
+      item.id === catalogItem.id &&
+      item.date === catalogItem.date &&
+      item.title === catalogItem.title &&
+      item.explanation === catalogItem.explanation &&
+      item.credit === catalogItem.credit &&
+      item.url === catalogItem.url &&
+      item.hdurl === catalogItem.hdurl &&
+      item.mediaType === catalogItem.mediaType &&
+      item.category === catalogItem.category &&
+      item.thumbnail === catalogItem.thumbnail,
   );
 }
 

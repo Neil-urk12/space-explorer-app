@@ -1,13 +1,14 @@
 import { SpaceCard } from '@/components/media/SpaceCard';
+import { Pill } from '@/components/ui/Chrome';
 import { Screen } from '@/components/ui/Screen';
 import { Type } from '@/components/ui/Type';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useTheme } from '@/context/ThemeContext';
 import { radius } from '@/theme';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export default function SavedScreen() {
-  const { items } = useFavorites();
+  const { items, error, canReset, retry, reset } = useFavorites();
   const { colors } = useTheme();
 
   return (
@@ -23,6 +24,16 @@ export default function SavedScreen() {
       <Type variant="body" style={{ marginTop: 10, marginBottom: 22 }}>
         Kept plates live on this device for the session. Open one to share or save the still.
       </Type>
+
+      {error ? (
+        <View style={[styles.error, { backgroundColor: colors.panel, borderColor: colors.hairline }]}>
+          <Type variant="micro" color={colors.spark} style={{ flex: 1 }}>
+            {error}
+          </Type>
+          <Pill label="Retry" onPress={retry} />
+          {canReset ? <Pill label="Reset" onPress={reset} /> : null}
+        </View>
+      ) : null}
 
       {items.length === 0 ? (
         <View
@@ -51,3 +62,16 @@ export default function SavedScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  error: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    padding: 12,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 16,
+  },
+});

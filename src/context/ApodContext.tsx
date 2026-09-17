@@ -67,9 +67,8 @@ export function ApodProvider({ children }: { children: ReactNode }) {
 
   const getItemById = useCallback(
     (id: string): SpaceItem | undefined => {
-      const foundInItems = items.find((item) => item.id === id);
-      if (foundInItems) return foundInItems;
-      return CATALOG.find((item) => item.id === id);
+      const catalogItem = CATALOG.find((item) => item.id === id);
+      return items.find((item) => item.id === id && item !== catalogItem);
     },
     [items],
   );
