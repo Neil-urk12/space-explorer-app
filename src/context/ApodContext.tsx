@@ -28,12 +28,6 @@ export function ApodProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-
     try {
       // Check cache first for faster paint if initial load
       if (!isRefresh) {
@@ -58,10 +52,13 @@ export function ApodProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    loadData(false);
+    void (async () => {
+      await loadData(false);
+    })();
   }, [loadData]);
 
   const refresh = useCallback(async () => {
+    setRefreshing(true);
     await loadData(true);
   }, [loadData]);
 
