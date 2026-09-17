@@ -9,6 +9,8 @@ const VIDEO_PLACEHOLDER = 'https://images.unsplash.com/photo-1451187580459-43490
 // ponytail: one global queue; add per-key locking only if cache write throughput matters.
 let cacheWriteQueue: Promise<void> = Promise.resolve();
 
+const CATEGORIES: readonly Category[] = ['galaxy', 'nebula', 'planet', 'earth', 'moon'];
+
 export interface NasaApodRaw {
   date: string;
   explanation: string;
@@ -26,6 +28,54 @@ export interface ApodFetchResult {
   isFallback: boolean;
   isRateLimited: boolean;
   error?: string;
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isIsoDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+function isOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === 'string';
+}
+
+function isValidNasaApodRaw(value: unknown, expectedDate?: string): value is NasaApodRaw {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const raw = value as Partial<NasaApodRaw>;
+  return (
+    isIsoDate(raw.date) &&
+    (!expectedDate || raw.date === expectedDate) &&
+    isNonEmptyString(raw.explanation) &&
+    isNonEmptyString(raw.service_version) &&
+    isNonEmptyString(raw.title) &&
+    isNonEmptyString(raw.url) &&
+    (raw.media_type === 'image' || raw.media_type === 'video') &&
+    isOptionalString(raw.hdurl) &&
+    isOptionalString(raw.copyright) &&
+    isOptionalString(raw.thumbnail_url)
+  );
+}
+
+export function isValidSpaceItem(value: unknown): value is SpaceItem {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const item = value as Partial<SpaceItem>;
+  return (
+    isIsoDate(item.id) &&
+    item.id === item.date &&
+    isNonEmptyString(item.title) &&
+    isNonEmptyString(item.explanation) &&
+    isNonEmptyString(item.credit) &&
+    isNonEmptyString(item.url) &&
+    (item.mediaType === 'image' || item.mediaType === 'video') &&
+    CATEGORIES.includes(item.category as Category) &&
+    isOptionalString(item.hdurl) &&
+    isOptionalString(item.thumbnail)
+  );
 }
 
 function inferCategory(title: string, explanation: string): Category {
@@ -47,7 +97,8 @@ function inferCategory(title: string, explanation: string): Category {
 }
 
 export function mapApodToSpaceItem(raw: NasaApodRaw): SpaceItem {
-  const credit = raw.copyright ? raw.copyright.trim().replace(/\r?\n/g, ' ') : 'NASA';
+  if (!isValidNasaApodRaw(raw)) throw new Error('Invalid NASA APOD item');
+  const credit = raw.copyright?.trim().replace(/\r?\n/g, ' ') || 'NASA';
   const isVideo = raw.media_type === 'video';
   const thumbnail = raw.thumbnail_url || (isVideo ? VIDEO_PLACEHOLDER : raw.url);
 
@@ -69,7 +120,7 @@ export async function getCachedApodItems(): Promise<SpaceItem[]> {
     const raw = await AsyncStorage.getItem(CACHE_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.filter(isValidSpaceItem) : [];
   } catch {
     return [];
   }
@@ -80,7 +131,7 @@ export async function saveCachedApodItems(newItems: SpaceItem[]): Promise<void> 
     try {
       const existing = await getCachedApodItems();
       const map = new Map<string, SpaceItem>();
-      newItems.forEach((item) => map.set(item.id, item));
+      newItems.filter(isValidSpaceItem).forEach((item) => map.set(item.id, item));
       existing.forEach((item) => {
         if (!map.has(item.id)) map.set(item.id, item);
       });
@@ -98,7 +149,7 @@ export async function fetchRecentApod(days: number = 8): Promise<ApodFetchResult
   const start = new Date();
   start.setUTCDate(start.getUTCDate() - days);
   const startDate = start.toISOString().slice(0, 10);
-  const url = `${BASE_URL}?api_key=${API_KEY}&start_date=${startDate}&thumbs=true`;
+  const url = `${BASE_URL}?api_key=${encodeURIComponent(API_KEY)}&start_date=${encodeURIComponent(startDate)}&thumbs=true`;
 
   try {
     const response = await fetch(url);
@@ -131,8 +182,14 @@ export async function fetchRecentApod(days: number = 8): Promise<ApodFetchResult
       };
     }
 
-    const data: NasaApodRaw[] = await response.json();
-    const mapped = data.map(mapApodToSpaceItem).reverse().slice(0, days); // Newest first
+    const data: unknown = await response.json();
+    if (!Array.isArray(data)) throw new Error('Invalid NASA APOD response');
+    const mapped = data
+      .filter((entry): entry is NasaApodRaw => isValidNasaApodRaw(entry))
+      .map(mapApodToSpaceItem)
+      .reverse()
+      .slice(0, days); // Newest first
+    if (mapped.length === 0) throw new Error('Invalid NASA APOD response');
 
     await saveCachedApodItems(mapped);
 
@@ -153,12 +210,14 @@ export async function fetchRecentApod(days: number = 8): Promise<ApodFetchResult
 }
 
 export async function fetchApodByDate(date: string): Promise<SpaceItem | null> {
-  const url = `${BASE_URL}?api_key=${API_KEY}&date=${date}&thumbs=true`;
+  if (!isIsoDate(date)) return null;
+  const url = `${BASE_URL}?api_key=${encodeURIComponent(API_KEY)}&date=${encodeURIComponent(date)}&thumbs=true`;
 
   try {
     const response = await fetch(url);
     if (!response.ok) return null;
-    const data: NasaApodRaw = await response.json();
+    const data: unknown = await response.json();
+    if (!isValidNasaApodRaw(data, date)) return null;
     const item = mapApodToSpaceItem(data);
     await saveCachedApodItems([item]);
     return item;
