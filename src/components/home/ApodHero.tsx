@@ -1,6 +1,6 @@
 import { Mark } from '@/components/ui/Marks';
 import { Type } from '@/components/ui/Type';
-import { useFavorites } from '@/context/FavoritesContext';
+import { useIsFavorite, useToggleFavorite } from '@/context/FavoritesContext';
 import { useTheme } from '@/context/ThemeContext';
 import { radius } from '@/theme';
 import { previewUrl, SpaceItem } from '@/types/space';
@@ -9,12 +9,13 @@ import { detailsHref } from '@/utils/navigation';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-export function ApodHero({ item }: { item: SpaceItem }) {
-  const { isFavorite, toggleFavorite } = useFavorites();
+export const ApodHero = memo(function ApodHero({ item }: { item: SpaceItem }) {
+  const kept = useIsFavorite(item.id);
+  const toggleFavorite = useToggleFavorite();
   const { colors } = useTheme();
-  const kept = isFavorite(item.id);
 
   return (
     <Pressable
@@ -54,7 +55,7 @@ export function ApodHero({ item }: { item: SpaceItem }) {
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrap: {
