@@ -34,7 +34,7 @@ export function SpaceCard({ item, layout = 'row', height = 168 }: Props) {
       ]}
     >
       <View style={[styles.media, { backgroundColor: colors.panelHot }, layout === 'tile' ? { height } : styles.rowMedia]}>
-        <Image source={{ uri: previewUrl(item) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={280} />
+        <Image source={{ uri: previewUrl(item) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={120} />
         <LinearGradient colors={['transparent', 'rgba(0,0,0,0.72)']} style={styles.fade} />
         <View style={[styles.badge, { borderColor: colors.hairline }]}>
           <Type variant="micro" color="#F4F7FF">

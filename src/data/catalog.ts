@@ -1,7 +1,9 @@
 import { CategoryFilter, MediaFilter, SpaceItem } from '@/types/space';
 
-const img = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1400&q=80`;
+const img = (id: string, width = 1400) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=80`;
+
+const thumb = (id: string) => img(id, 520);
 
 export const CATALOG: SpaceItem[] = [
   {
@@ -12,6 +14,7 @@ export const CATALOG: SpaceItem[] = [
       'City lights trace the continents while the terminator slides into dusk. This Astronomy Picture of the Day frames our world as a thin, glowing harbor in a much darker sea.',
     credit: 'NASA',
     url: img('photo-1446776811953-b23d57bd21aa'),
+    thumbnail: thumb('photo-1446776811953-b23d57bd21aa'),
     mediaType: 'image',
     category: 'earth',
   },
@@ -23,6 +26,7 @@ export const CATALOG: SpaceItem[] = [
       'Towers of cool hydrogen rise several light-years high, sculpted by ultraviolet wind from nearby young stars. Newborn suns still hide in the densest knots of dust.',
     credit: 'NASA / ESA / Hubble',
     url: img('photo-1464802686167-b939a6910659'),
+    thumbnail: thumb('photo-1464802686167-b939a6910659'),
     mediaType: 'image',
     category: 'nebula',
   },
@@ -34,6 +38,7 @@ export const CATALOG: SpaceItem[] = [
       'The nearest spiral giant spans more than 200,000 light-years. Dust lanes curl toward a bright core where hundreds of billions of stars keep a slow, ancient clock.',
     credit: 'NASA / ESA',
     url: img('photo-1543722530-d2c3201371e7'),
+    thumbnail: thumb('photo-1543722530-d2c3201371e7'),
     mediaType: 'image',
     category: 'galaxy',
   },
@@ -45,6 +50,7 @@ export const CATALOG: SpaceItem[] = [
       'Sunlight rakes across the rings until they become a paper-thin line. Storms in the amber atmosphere still turn, indifferent to the geometry we find so precise.',
     credit: 'NASA / JPL-Caltech / Cassini',
     url: img('photo-1614732414444-096e5f1122d5'),
+    thumbnail: thumb('photo-1614732414444-096e5f1122d5'),
     mediaType: 'image',
     category: 'planet',
   },
@@ -56,6 +62,7 @@ export const CATALOG: SpaceItem[] = [
       'Oceans, cloud streets, and a razor of atmosphere. A reminder that every night sky we study is seen from this one moving observatory.',
     credit: 'NASA',
     url: img('photo-1451187580459-43490279c0fa'),
+    thumbnail: thumb('photo-1451187580459-43490279c0fa'),
     mediaType: 'image',
     category: 'earth',
   },
@@ -67,6 +74,7 @@ export const CATALOG: SpaceItem[] = [
       'A cavern of gas four light-years wide, lit from within by the Trapezium. Infrared still finds proplyds — infant solar systems — along the glowing walls.',
     credit: 'NASA / ESA / Hubble',
     url: img('photo-1502134249126-9f3755a50d78'),
+    thumbnail: thumb('photo-1502134249126-9f3755a50d78'),
     mediaType: 'image',
     category: 'nebula',
   },
@@ -78,6 +86,7 @@ export const CATALOG: SpaceItem[] = [
       'Impact basins and mare basalts resolve into a silver relief. The highlands are older, brighter, and still keep the record of the early solar system.',
     credit: 'NASA / GSFC',
     url: img('photo-1522030299830-16b8d3d049ab'),
+    thumbnail: thumb('photo-1522030299830-16b8d3d049ab'),
     mediaType: 'image',
     category: 'moon',
   },
@@ -89,6 +98,7 @@ export const CATALOG: SpaceItem[] = [
       'The Great Red Spot is a storm older than most nations. Bands of ammonia ice and deeper reds shear past each other at hundreds of kilometers an hour.',
     credit: 'NASA / Juno',
     url: img('photo-1630694093867-4b947d25d1c6'),
+    thumbnail: thumb('photo-1630694093867-4b947d25d1c6'),
     mediaType: 'image',
     category: 'planet',
   },
@@ -100,6 +110,7 @@ export const CATALOG: SpaceItem[] = [
       'Our galaxy’s dusty spine rises behind a dark ridgeline. Most of those points are not stars you could name — they are unresolved light from farther in the disk.',
     credit: 'NASA / ESA',
     url: img('photo-1419242902214-272b3f66ee7a'),
+    thumbnail: thumb('photo-1419242902214-272b3f66ee7a'),
     mediaType: 'image',
     category: 'galaxy',
   },
@@ -111,6 +122,7 @@ export const CATALOG: SpaceItem[] = [
       'Iron-rich dust stains the plains. Polar caps of water and carbon dioxide ice shrink and grow with a year almost twice as long as ours.',
     credit: 'NASA / ESA / OSIRIS',
     url: img('photo-1614728894747-a83421e2b9c9'),
+    thumbnail: thumb('photo-1614728894747-a83421e2b9c9'),
     mediaType: 'image',
     category: 'planet',
   },
@@ -122,6 +134,7 @@ export const CATALOG: SpaceItem[] = [
       'A patch of sky smaller than a grain of sand held at arm’s length. Almost every smudge is a galaxy, some shining from when the universe was still young.',
     credit: 'NASA / ESA / CSA / STScI',
     url: img('photo-1462331940005-aee00c9d8771'),
+    thumbnail: thumb('photo-1462331940005-aee00c9d8771'),
     mediaType: 'image',
     category: 'galaxy',
   },
@@ -133,6 +146,7 @@ export const CATALOG: SpaceItem[] = [
       'A planetary nebula is not a planet — it is the last breath of a star like ours. The glowing eye is ionized gas pushed into the dark by a white dwarf at center.',
     credit: 'NASA / ESA / Hubble',
     url: img('photo-1465101162946-4377e57745c3'),
+    thumbnail: thumb('photo-1465101162946-4377e57745c3'),
     mediaType: 'image',
     category: 'nebula',
   },
@@ -144,6 +158,7 @@ export const CATALOG: SpaceItem[] = [
       'The International Space Station crosses a sunlit limb of Earth. Solar arrays catch the same light that makes the ocean look like hammered steel.',
     credit: 'NASA',
     url: img('photo-1446776653964-20c1d3a81b06'),
+    thumbnail: thumb('photo-1446776653964-20c1d3a81b06'),
     mediaType: 'image',
     category: 'earth',
   },
@@ -155,7 +170,7 @@ export const CATALOG: SpaceItem[] = [
       'A simulated pass above Jupiter’s cloud tops, assembled from spacecraft frames. Watch the belts shear and the spot turn like a slow red engine.',
     credit: 'NASA / JPL',
     url: img('photo-1614730321146-b6fa6a46bcb4'),
-    thumbnail: img('photo-1614730321146-b6fa6a46bcb4'),
+    thumbnail: thumb('photo-1614730321146-b6fa6a46bcb4'),
     mediaType: 'video',
     category: 'planet',
   },

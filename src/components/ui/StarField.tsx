@@ -1,9 +1,12 @@
 import { useTheme } from '@/context/ThemeContext';
+import type { Palette } from '@/theme';
+import { useIsFocused } from 'expo-router';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
 
-type Star = { left: number; top: number; size: number; delay: number; duration: number; sparkle: boolean };
+type Star = { left: number; top: number; size: number; delay: number; duration: number; sparkle: boolean; animated: boolean };
+type StarColors = Pick<Palette, 'spark' | 'starDot'>;
 
 function buildStars(count: number): Star[] {
   const stars: Star[] = [];
@@ -17,15 +20,64 @@ function buildStars(count: number): Star[] {
       delay: seed % 2400,
       duration: 1400 + (seed % 1800),
       sparkle: seed % 9 === 0,
+      animated: i % 6 === 0,
     });
   }
   return stars;
 }
 
-const STARS = buildStars(110);
+const STARS = buildStars(48);
 
-function Twinkle({ star }: { star: Star }) {
-  const { colors } = useTheme();
+function StarContent({ star, colors }: { star: Star; colors: StarColors }) {
+  if (!star.sparkle) return null;
+
+  return (
+    <>
+      <View style={[styles.sparkArm, { width: star.size + 4, height: 1, backgroundColor: colors.spark }]} />
+      <View style={[styles.sparkArm, { width: 1, height: star.size + 4, backgroundColor: colors.spark }]} />
+      <View style={[styles.sparkCore, { backgroundColor: colors.starDot }]} />
+    </>
+  );
+}
+
+function StaticStar({ star, colors }: { star: Star; colors: StarColors }) {
+  if (star.sparkle) {
+    return (
+      <View
+        style={[
+          styles.sparkle,
+          {
+            left: `${star.left}%`,
+            top: `${star.top}%`,
+            width: star.size + 4,
+            height: star.size + 4,
+            opacity: 0.25,
+          },
+        ]}
+      >
+        <StarContent star={star} colors={colors} />
+      </View>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.star,
+        {
+          left: `${star.left}%`,
+          top: `${star.top}%`,
+          width: star.size,
+          height: star.size,
+          opacity: 0.35,
+          backgroundColor: colors.starDot,
+        },
+      ]}
+    />
+  );
+}
+
+function AnimatedStar({ star, colors }: { star: Star; colors: StarColors }) {
   const opacity = useSharedValue(star.sparkle ? 0.25 : 0.35);
 
   useEffect(() => {
@@ -33,6 +85,8 @@ function Twinkle({ star }: { star: Star }) {
       star.delay,
       withRepeat(withTiming(star.sparkle ? 1 : 0.85, { duration: star.duration, easing: Easing.inOut(Easing.quad) }), -1, true),
     );
+
+    return () => cancelAnimation(opacity);
   }, [opacity, star]);
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
@@ -46,9 +100,7 @@ function Twinkle({ star }: { star: Star }) {
           { left: `${star.left}%`, top: `${star.top}%`, width: star.size + 4, height: star.size + 4 },
         ]}
       >
-        <View style={[styles.sparkArm, { width: star.size + 4, height: 1, backgroundColor: colors.spark }]} />
-        <View style={[styles.sparkArm, { width: 1, height: star.size + 4, backgroundColor: colors.spark }]} />
-        <View style={[styles.sparkCore, { backgroundColor: colors.starDot }]} />
+        <StarContent star={star} colors={colors} />
       </Animated.View>
     );
   }
@@ -71,10 +123,13 @@ function Twinkle({ star }: { star: Star }) {
 }
 
 export function StarField() {
+  const { colors } = useTheme();
+  const focused = useIsFocused();
+
   return (
-    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       {STARS.map((star, index) => (
-        <Twinkle key={index} star={star} />
+        focused && star.animated ? <AnimatedStar key={index} star={star} colors={colors} /> : <StaticStar key={index} star={star} colors={colors} />
       ))}
     </View>
   );

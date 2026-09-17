@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const CACHE_STORAGE_KEY = '@space_explorer/apod_cache';
 const API_KEY = process.env.EXPO_PUBLIC_NASA_API_KEY || 'DEMO_KEY';
 const BASE_URL = 'https://api.nasa.gov/planetary/apod';
-const VIDEO_PLACEHOLDER = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1400&q=80';
+const VIDEO_PLACEHOLDER = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=520&q=80';
 // ponytail: one global queue; add per-key locking only if cache write throughput matters.
 let cacheWriteQueue: Promise<void> = Promise.resolve();
 
@@ -109,6 +109,7 @@ export function mapApodToSpaceItem(raw: NasaApodRaw): SpaceItem {
     explanation: raw.explanation,
     credit,
     url: raw.url,
+    hdurl: raw.hdurl,
     thumbnail,
     mediaType: isVideo ? 'video' : 'image',
     category: inferCategory(raw.title, raw.explanation),

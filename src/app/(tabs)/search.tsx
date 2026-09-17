@@ -8,7 +8,7 @@ import { CATALOG } from '@/data/catalog';
 import { CategoryFilter, MediaFilter, SpaceItem } from '@/types/space';
 import { formatHudDate } from '@/utils/dates';
 import { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
 export default function SearchScreen() {
   const { colors } = useTheme();
@@ -40,8 +40,8 @@ export default function SearchScreen() {
     });
   }, [allItems, query, media, category, selectedDate]);
 
-  return (
-    <Screen scroll>
+  const header = (
+    <View>
       <SearchPanel
         query={query}
         onQuery={setQuery}
@@ -57,14 +57,41 @@ export default function SearchScreen() {
       <Type variant="micro" color={colors.spark} style={{ marginTop: 28 }}>
         {selectedDate ? `Locked · ${formatHudDate(selectedDate)}` : `Matches · ${matches.length}`}
       </Type>
-      <View style={{ marginTop: 12, gap: 12 }}>
-        {matches.map((item) => (
-          <SpaceCard key={item.id} item={item} />
-        ))}
-        {matches.length === 0 ? (
-          <Type variant="body">No plates in the archive match those filters.</Type>
-        ) : null}
-      </View>
+    </View>
+  );
+
+  return (
+    <Screen>
+      <FlatList
+        data={matches}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <SpaceCard item={item} />}
+        ItemSeparatorComponent={<View style={styles.separator} />}
+        ListHeaderComponent={header}
+        ListEmptyComponent={<Type variant="body" style={styles.empty}>No plates in the archive match those filters.</Type>}
+        initialNumToRender={4}
+        maxToRenderPerBatch={4}
+        windowSize={5}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      />
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    paddingBottom: 12,
+  },
+  separator: {
+    height: 12,
+  },
+  empty: {
+    marginTop: 12,
+  },
+});

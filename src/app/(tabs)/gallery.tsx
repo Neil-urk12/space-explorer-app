@@ -7,7 +7,7 @@ import { CATALOG } from '@/data/catalog';
 import { useTheme } from '@/context/ThemeContext';
 import { CategoryFilter, SpaceItem } from '@/types/space';
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
 const FILTERS: { id: CategoryFilter; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -36,11 +36,14 @@ export default function GalleryScreen() {
     () => allItems.filter((item) => filter === 'all' || item.category === filter),
     [allItems, filter],
   );
-  const left = visible.filter((_, index) => index % 2 === 0);
-  const right = visible.filter((_, index) => index % 2 === 1);
+  const rows = useMemo(() => {
+    const next: SpaceItem[][] = [];
+    for (let index = 0; index < visible.length; index += 2) next.push(visible.slice(index, index + 2));
+    return next;
+  }, [visible]);
 
-  return (
-    <Screen scroll>
+  const header = (
+    <View>
       <View style={{ paddingRight: 36 }}>
         <Type variant="micro" color={colors.gold}>
           Gallery
@@ -58,28 +61,48 @@ export default function GalleryScreen() {
           <Pill key={item.id} label={item.label} active={filter === item.id} onPress={() => setFilter(item.id)} />
         ))}
       </View>
+    </View>
+  );
 
-      <View style={styles.columns}>
-        <View style={styles.col}>
-          {left.map((item, index) => (
-            <View key={item.id} style={{ marginBottom: 8 }}>
-              <SpaceCard item={item} layout="tile" height={index % 2 === 0 ? 210 : 150} />
-            </View>
-          ))}
-        </View>
-        <View style={styles.col}>
-          {right.map((item, index) => (
-            <View key={item.id} style={{ marginBottom: 8 }}>
-              <SpaceCard item={item} layout="tile" height={index % 2 === 0 ? 150 : 210} />
-            </View>
-          ))}
-        </View>
-      </View>
+  return (
+    <Screen>
+      <FlatList
+        data={rows}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        keyExtractor={(row) => row.map((item) => item.id).join(':')}
+        renderItem={({ item: row, index: rowIndex }) => (
+          <View style={styles.columns}>
+            {row.map((item, columnIndex) => {
+              const itemIndex = rowIndex * 2 + columnIndex;
+              const tall = itemIndex % 4 === 0 || itemIndex % 4 === 3;
+              return (
+                <View key={item.id} style={styles.col}>
+                  <SpaceCard item={item} layout="tile" height={tall ? 210 : 150} />
+                </View>
+              );
+            })}
+            {row.length === 1 ? <View style={styles.col} /> : null}
+          </View>
+        )}
+        ItemSeparatorComponent={<View style={styles.separator} />}
+        ListHeaderComponent={header}
+        initialNumToRender={4}
+        maxToRenderPerBatch={4}
+        windowSize={5}
+        showsVerticalScrollIndicator={false}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    paddingBottom: 8,
+  },
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -89,8 +112,12 @@ const styles = StyleSheet.create({
   columns: {
     flexDirection: 'row',
     gap: 8,
+    alignItems: 'flex-start',
   },
   col: {
     flex: 1,
+  },
+  separator: {
+    height: 8,
   },
 });
