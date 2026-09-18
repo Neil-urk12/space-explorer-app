@@ -5,7 +5,7 @@ import { CATALOG_DATES } from '@/data/catalog';
 import { fonts, radius } from '@/theme';
 import { CategoryFilter, MediaFilter } from '@/types/space';
 import { daysInMonth, formatMonthYear, parseIsoDate, toIsoDate } from '@/utils/dates';
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 const MEDIA: { id: MediaFilter; label: string }[] = [
@@ -46,7 +46,7 @@ function nudgeMonth(iso: string, amount: number): string {
   return next;
 }
 
-export function SearchPanel({
+export const SearchPanel = memo(function SearchPanel({
   query,
   onQuery,
   media,
@@ -181,7 +181,7 @@ export function SearchPanel({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   inputWrap: {
