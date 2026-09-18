@@ -5,13 +5,32 @@ import { Type } from '@/components/ui/Type';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useTheme } from '@/context/ThemeContext';
 import { radius } from '@/theme';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { SpaceItem } from '@/types/space';
+import { memo, useCallback, useMemo } from 'react';
+import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native';
 
-export default function SavedScreen() {
-  const { items, error, canReset, retry, reset } = useFavorites();
+function ItemSeparator() {
+  return <View style={styles.separator} />;
+}
+
+function itemKeyExtractor(item: SpaceItem): string {
+  return item.id;
+}
+
+const SavedHeader = memo(function SavedHeader({
+  error,
+  canReset,
+  retry,
+  reset,
+}: {
+  error: string | null;
+  canReset: boolean;
+  retry: () => void;
+  reset: () => void;
+}) {
   const { colors } = useTheme();
 
-  const header = (
+  return (
     <View>
       <View style={{ paddingRight: 36 }}>
         <Type variant="micro" color={colors.gold}>
@@ -36,16 +55,20 @@ export default function SavedScreen() {
       ) : null}
     </View>
   );
+});
 
-  const empty = (
+const SavedEmpty = memo(function SavedEmpty() {
+  const { colors } = useTheme();
+
+  return (
     <View
-      style={{
-        borderWidth: 1,
-        borderColor: colors.hairline,
-        padding: 22,
-        backgroundColor: colors.panel,
-        borderRadius: radius.md,
-      }}
+      style={[
+        styles.emptyBox,
+        {
+          borderColor: colors.hairline,
+          backgroundColor: colors.panel,
+        },
+      ]}
     >
       <Type variant="label" color={colors.spark}>
         Empty vault
@@ -55,6 +78,20 @@ export default function SavedScreen() {
       </Type>
     </View>
   );
+});
+
+export default function SavedScreen() {
+  const { items, error, canReset, retry, reset } = useFavorites();
+
+  const header = useMemo(
+    () => <SavedHeader error={error} canReset={canReset} retry={retry} reset={reset} />,
+    [error, canReset, retry, reset],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: ListRenderItemInfo<SpaceItem>) => <SpaceCard item={item} />,
+    [],
+  );
 
   return (
     <Screen>
@@ -62,11 +99,11 @@ export default function SavedScreen() {
         data={items}
         style={styles.list}
         contentContainerStyle={styles.listContent}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <SpaceCard item={item} />}
-        ItemSeparatorComponent={<View style={styles.separator} />}
+        keyExtractor={itemKeyExtractor}
+        renderItem={renderItem}
+        ItemSeparatorComponent={ItemSeparator}
         ListHeaderComponent={header}
-        ListEmptyComponent={empty}
+        ListEmptyComponent={SavedEmpty}
         initialNumToRender={4}
         maxToRenderPerBatch={4}
         windowSize={5}
@@ -85,6 +122,11 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 12,
+  },
+  emptyBox: {
+    borderWidth: 1,
+    padding: 22,
+    borderRadius: radius.md,
   },
   error: {
     flexDirection: 'row',
