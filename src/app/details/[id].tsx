@@ -8,7 +8,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { getById } from '@/data/catalog';
 import { fetchApodByDate, getCachedApodItems } from '@/services/apod';
 import { radius } from '@/theme';
-import { previewUrl, SpaceItem } from '@/types/space';
+import { detailImageUrl, SpaceItem } from '@/types/space';
 import { formatHudDate } from '@/utils/dates';
 import { detailsHref } from '@/utils/navigation';
 import { Image } from 'expo-image';
@@ -125,7 +125,7 @@ export default function DetailsScreen() {
       </View>
 
       <View style={[styles.stage, { backgroundColor: colors.panelHot }]}>
-        <Image source={{ uri: previewUrl(item) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={350} />
+        <Image source={{ uri: detailImageUrl(item) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={350} />
         <LinearGradient colors={['transparent', 'rgba(0,0,0,0.45)']} style={styles.stageFade} />
         {item.mediaType === 'video' ? (
           <Pressable

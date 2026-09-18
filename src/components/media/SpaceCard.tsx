@@ -1,6 +1,6 @@
 import { Mark } from '@/components/ui/Marks';
 import { Type } from '@/components/ui/Type';
-import { useFavorites } from '@/context/FavoritesContext';
+import { useIsFavorite, useToggleFavorite } from '@/context/FavoritesContext';
 import { useTheme } from '@/context/ThemeContext';
 import { radius } from '@/theme';
 import { previewUrl, SpaceItem } from '@/types/space';
@@ -9,6 +9,7 @@ import { detailsHref } from '@/utils/navigation';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 type Props = {
@@ -17,10 +18,10 @@ type Props = {
   height?: number;
 };
 
-export function SpaceCard({ item, layout = 'row', height = 168 }: Props) {
-  const { isFavorite, toggleFavorite } = useFavorites();
+export const SpaceCard = memo(function SpaceCard({ item, layout = 'row', height = 168 }: Props) {
+  const kept = useIsFavorite(item.id);
+  const toggleFavorite = useToggleFavorite();
   const { colors } = useTheme();
-  const kept = isFavorite(item.id);
 
   return (
     <Pressable
@@ -34,7 +35,7 @@ export function SpaceCard({ item, layout = 'row', height = 168 }: Props) {
       ]}
     >
       <View style={[styles.media, { backgroundColor: colors.panelHot }, layout === 'tile' ? { height } : styles.rowMedia]}>
-        <Image source={{ uri: previewUrl(item) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={280} />
+        <Image source={{ uri: previewUrl(item) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={120} />
         <LinearGradient colors={['transparent', 'rgba(0,0,0,0.72)']} style={styles.fade} />
         <View style={[styles.badge, { borderColor: colors.hairline }]}>
           <Type variant="micro" color="#F4F7FF">
@@ -69,7 +70,7 @@ export function SpaceCard({ item, layout = 'row', height = 168 }: Props) {
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

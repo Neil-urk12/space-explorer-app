@@ -19,3 +19,7 @@ export type SpaceItem = {
 export function previewUrl(item: SpaceItem): string {
   return item.thumbnail || item.url;
 }
+
+export function detailImageUrl(item: SpaceItem): string {
+  return item.mediaType === 'video' ? previewUrl(item) : item.hdurl || item.url;
+}
