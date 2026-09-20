@@ -123,7 +123,7 @@ export default function SearchScreen() {
   );
 
   return (
-    <Screen>
+    <Screen hasSky={false}>
       <FlatList
         data={matches}
         style={styles.list}
