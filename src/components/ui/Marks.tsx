@@ -14,7 +14,9 @@ type MarkName =
   | 'play'
   | 'gear'
   | 'sun'
-  | 'moon';
+  | 'moon'
+  | 'calendar'
+  | 'close';
 
 export function Mark({ name, active = false, size = 18 }: { name: MarkName; active?: boolean; size?: number }) {
   const { colors } = useTheme();
@@ -176,6 +178,52 @@ export function Mark({ name, active = false, size = 18 }: { name: MarkName; acti
             height: size * 0.5,
             borderRadius: 99,
             backgroundColor: colors.void,
+          }}
+        />
+      </View>
+    );
+  }
+
+  if (name === 'calendar') {
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View
+          style={{
+            width: size * 0.78,
+            height: size * 0.72,
+            borderWidth: stroke,
+            borderColor: color,
+            borderRadius: 2,
+            marginTop: 2,
+          }}
+        >
+          <View style={{ height: stroke + 0.5, backgroundColor: color, marginTop: size * 0.16, width: '100%' }} />
+        </View>
+        <View style={{ position: 'absolute', top: 1, left: size * 0.24, width: stroke, height: size * 0.2, backgroundColor: color }} />
+        <View style={{ position: 'absolute', top: 1, right: size * 0.24, width: stroke, height: size * 0.2, backgroundColor: color }} />
+      </View>
+    );
+  }
+
+  if (name === 'close') {
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View
+          style={{
+            position: 'absolute',
+            width: stroke,
+            height: size * 0.7,
+            backgroundColor: color,
+            transform: [{ rotate: '45deg' }],
+          }}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            width: stroke,
+            height: size * 0.7,
+            backgroundColor: color,
+            transform: [{ rotate: '-45deg' }],
           }}
         />
       </View>

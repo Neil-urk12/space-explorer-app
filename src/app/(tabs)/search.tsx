@@ -33,6 +33,7 @@ const SearchHeader = memo(function SearchHeader({
   onSelectDate,
   availableDates,
   matchCount,
+  allItems,
 }: {
   query: string;
   onQuery: (value: string) => void;
@@ -44,6 +45,7 @@ const SearchHeader = memo(function SearchHeader({
   onSelectDate: (value: string | null) => void;
   availableDates: Set<string>;
   matchCount: number;
+  allItems: SpaceItem[];
 }) {
   const { colors } = useTheme();
 
@@ -59,10 +61,11 @@ const SearchHeader = memo(function SearchHeader({
         selectedDate={selectedDate}
         onSelectDate={onSelectDate}
         availableDates={availableDates}
+        items={allItems}
       />
 
-      <Type variant="micro" color={colors.spark} style={{ marginTop: 28 }}>
-        {selectedDate ? `Locked · ${formatHudDate(selectedDate)}` : `Matches · ${matchCount}`}
+      <Type variant="micro" color={colors.spark} style={{ marginTop: 20 }}>
+        {selectedDate ? `Locked · ${formatHudDate(selectedDate)} (${matchCount})` : `Matches · ${matchCount}`}
       </Type>
     </View>
   );
@@ -112,9 +115,10 @@ export default function SearchScreen() {
         onSelectDate={setSelectedDate}
         availableDates={availableDates}
         matchCount={matches.length}
+        allItems={allItems}
       />
     ),
-    [query, media, category, selectedDate, availableDates, matches.length],
+    [query, media, category, selectedDate, availableDates, matches.length, allItems],
   );
 
   const renderItem = useCallback(

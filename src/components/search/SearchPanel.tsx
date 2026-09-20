@@ -1,11 +1,12 @@
+import { DateFilterSheet } from '@/components/search/DateFilterSheet';
 import { Hairline, Pill } from '@/components/ui/Chrome';
+import { Mark } from '@/components/ui/Marks';
 import { Type } from '@/components/ui/Type';
 import { useTheme } from '@/context/ThemeContext';
-import { CATALOG_DATES } from '@/data/catalog';
 import { fonts, radius } from '@/theme';
-import { CategoryFilter, MediaFilter } from '@/types/space';
-import { daysInMonth, formatMonthYear, parseIsoDate, toIsoDate } from '@/utils/dates';
-import { memo, useMemo, useState } from 'react';
+import { CategoryFilter, MediaFilter, SpaceItem } from '@/types/space';
+import { formatHudDate } from '@/utils/dates';
+import { memo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 const MEDIA: { id: MediaFilter; label: string }[] = [
@@ -33,18 +34,8 @@ type Props = {
   selectedDate: string | null;
   onSelectDate: (value: string | null) => void;
   availableDates?: Set<string>;
+  items?: SpaceItem[];
 };
-
-function nudgeMonth(iso: string, amount: number): string {
-  const date = parseIsoDate(iso);
-  date.setDate(1);
-  date.setMonth(date.getMonth() + amount);
-  const next = toIsoDate(date);
-  const now = new Date();
-  const maxMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-  if (next < '2024-01-01' || next > maxMonth) return iso;
-  return next;
-}
 
 export const SearchPanel = memo(function SearchPanel({
   query,
@@ -56,19 +47,10 @@ export const SearchPanel = memo(function SearchPanel({
   selectedDate,
   onSelectDate,
   availableDates,
+  items,
 }: Props) {
   const { colors } = useTheme();
-  const now = new Date();
-  const currentMonthIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-  const [monthIso, setMonthIso] = useState(currentMonthIso);
-  const cursor = parseIsoDate(monthIso);
-  const year = cursor.getFullYear();
-  const month = cursor.getMonth();
-  const days = daysInMonth(year, month);
-  const blanks = new Date(year, month, 1).getDay();
-  const cells = useMemo(() => [...Array(blanks).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)], [blanks, days]);
-  const activeDates = availableDates || CATALOG_DATES;
-  const shownMonth = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+  const [sheetVisible, setSheetVisible] = useState(false);
 
   return (
     <View>
@@ -106,79 +88,91 @@ export const SearchPanel = memo(function SearchPanel({
         ))}
       </View>
 
-      <Hairline style={{ marginVertical: 18 }} />
+      <Hairline style={{ marginVertical: 16 }} />
 
-      <View style={styles.monthNav}>
+      {/* Observation Date Filter Trigger */}
+      <View
+        style={[
+          styles.dateTrigger,
+          {
+            borderColor: selectedDate ? colors.spark : colors.hairline,
+            backgroundColor: selectedDate ? colors.sparkDim : colors.panel,
+          },
+        ]}
+      >
         <Pressable
-          onPress={() => {
-            onSelectDate(null);
-            setMonthIso((current) => nudgeMonth(current, -1));
-          }}
-          hitSlop={8}
+          onPress={() => setSheetVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel={
+            selectedDate
+              ? `Observation date locked to ${formatHudDate(selectedDate)}. Tap to change date.`
+              : 'Lock observation date. Tap to open calendar archive.'
+          }
+          style={({ pressed }) => [
+            styles.dateTriggerButton,
+            !selectedDate && styles.dateTriggerButtonWithArrow,
+            pressed && styles.pressed,
+          ]}
         >
-          <Type variant="label" color={colors.spark}>
-            ←
-          </Type>
-        </Pressable>
-        <Type variant="label" color={colors.star}>
-          {formatMonthYear(shownMonth)}
-        </Type>
-        <Pressable
-          onPress={() => {
-            onSelectDate(null);
-            setMonthIso((current) => nudgeMonth(current, 1));
-          }}
-          hitSlop={8}
-        >
-          <Type variant="label" color={colors.spark}>
-            →
-          </Type>
-        </Pressable>
-      </View>
-
-      <View style={styles.weekRow}>
-        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-          <Type key={`${day}-${index}`} variant="micro" style={styles.weekCell}>
-            {day}
-          </Type>
-        ))}
-      </View>
-      <View style={styles.grid}>
-        {cells.map((day, index) => {
-          if (!day) return <View key={`b-${index}`} style={styles.day} />;
-          const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const hasPlate = activeDates.has(iso);
-          const selected = selectedDate === iso;
-          return (
-            <Pressable
-              key={iso}
-              disabled={!hasPlate}
-              onPress={() => onSelectDate(selected ? null : iso)}
+          <View style={styles.dateTriggerLeft}>
+            <View
               style={[
-                styles.day,
-                selected && { backgroundColor: colors.spark },
-                hasPlate && !selected && { backgroundColor: colors.sparkDim },
-                !hasPlate && styles.dayOff,
+                styles.dateIconWrap,
+                {
+                  backgroundColor: selectedDate ? colors.spark : colors.panelHot,
+                  borderColor: selectedDate ? colors.spark : colors.hairline,
+                },
               ]}
             >
-              <Type variant="numeric" color={selected ? colors.onAccent : hasPlate ? colors.star : colors.faint}>
-                {String(day).padStart(2, '0')}
+              <Mark name="calendar" active={Boolean(selectedDate)} size={16} />
+            </View>
+            <View style={styles.dateTriggerTexts}>
+              <Type variant="micro" color={selectedDate ? colors.spark : colors.gold}>
+                {selectedDate ? 'LOCKED OBSERVATION DATE' : 'OBSERVATION DATE'}
               </Type>
-            </Pressable>
-          );
-        })}
-      </View>
-      {selectedDate ? (
-        <Pressable onPress={() => onSelectDate(null)} style={[styles.clear, { borderBottomColor: colors.spark }]}>
-          <Type variant="micro" color={colors.spark}>
-            Clear date lock
-          </Type>
+              <Type
+                variant="label"
+                color={selectedDate ? colors.spark : colors.star}
+                style={{ fontFamily: selectedDate ? fonts.semibold : fonts.regular, marginTop: 2 }}
+              >
+                {selectedDate ? formatHudDate(selectedDate) : 'Any date in archive (Tap to lock)'}
+              </Type>
+            </View>
+          </View>
+
+          {!selectedDate ? (
+            <View style={[styles.filterArrow, { borderColor: colors.hairline }]}>
+              <Type variant="micro" color={colors.faint}>
+                Filter ▾
+              </Type>
+            </View>
+          ) : null}
         </Pressable>
-      ) : (
-        <Type variant="micro" style={{ marginTop: 12 }}>
-          Lit dates have a plate in this archive
-        </Type>
-      )}
+
+        {selectedDate ? (
+          <Pressable
+            onPress={() => onSelectDate(null)}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Clear date lock"
+            style={[styles.clearPill, { borderColor: colors.hairlineStrong, backgroundColor: colors.panel }]}
+          >
+            <Mark name="close" size={10} active />
+            <Type variant="micro" color={colors.spark} style={{ marginLeft: 6 }}>
+              Clear
+            </Type>
+          </Pressable>
+        ) : null}
+      </View>
+
+      <DateFilterSheet
+        visible={sheetVisible}
+        onClose={() => setSheetVisible(false)}
+        selectedDate={selectedDate}
+        onSelectDate={onSelectDate}
+        availableDates={availableDates}
+        items={items}
+      />
     </View>
   );
 });
@@ -203,38 +197,57 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 12,
   },
-  monthNav: {
+  dateTrigger: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'space-between',
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 56,
   },
-  weekRow: {
+  dateTriggerButton: {
     flexDirection: 'row',
-    marginBottom: 4,
+    alignItems: 'center',
+    flex: 1,
+    paddingLeft: 14,
+    paddingVertical: 12,
   },
-  weekCell: {
-    width: `${100 / 7}%`,
-    textAlign: 'center',
+  dateTriggerButtonWithArrow: {
+    paddingRight: 14,
   },
-  grid: {
+  dateTriggerLeft: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    flex: 1,
   },
-  day: {
-    width: `${100 / 7}%`,
-    height: 38,
+  dateIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
   },
-  dayOff: {
-    opacity: 0.35,
+  dateTriggerTexts: {
+    marginLeft: 12,
+    flex: 1,
   },
-  clear: {
-    alignSelf: 'flex-start',
-    marginTop: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingBottom: 3,
+  clearPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginRight: 14,
+  },
+  filterArrow: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  pressed: {
+    opacity: 0.78,
   },
 });
