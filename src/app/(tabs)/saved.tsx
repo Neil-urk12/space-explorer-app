@@ -94,7 +94,7 @@ export default function SavedScreen() {
   );
 
   return (
-    <Screen>
+    <Screen hasSky={false}>
       <FlatList
         data={items}
         style={styles.list}

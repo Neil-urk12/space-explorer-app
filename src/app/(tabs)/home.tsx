@@ -15,6 +15,7 @@ export default function HomeScreen() {
 
   return (
     <Screen
+      hasSky={false}
       scroll
       refreshControl={
         <RefreshControl

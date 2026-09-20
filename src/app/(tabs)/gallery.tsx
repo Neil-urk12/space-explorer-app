@@ -65,7 +65,7 @@ export default function GalleryScreen() {
   );
 
   return (
-    <Screen>
+    <Screen hasSky={false}>
       <FlatList
         data={rows}
         style={styles.list}

@@ -13,10 +13,24 @@ type ScreenProps = {
   padded?: boolean;
   tabInset?: boolean;
   settings?: boolean;
+  hasSky?: boolean;
   refreshControl?: ScrollViewProps['refreshControl'];
   contentContainerStyle?: ScrollViewProps['contentContainerStyle'];
   style?: ViewStyle;
 };
+
+export function SkyBackground() {
+  const { colors } = useTheme();
+
+  return (
+    <View pointerEvents="none" style={[styles.sky, { backgroundColor: colors.void }]}>
+      <LinearGradient colors={[colors.sky[0], colors.sky[1], colors.sky[2]]} style={StyleSheet.absoluteFill} />
+      <View style={[styles.nebulaA, { backgroundColor: colors.nebulaA }]} />
+      <View style={[styles.nebulaB, { backgroundColor: colors.nebulaB }]} />
+      <StarField />
+    </View>
+  );
+}
 
 export function Screen({
   children,
@@ -24,6 +38,7 @@ export function Screen({
   padded = true,
   tabInset = true,
   settings = true,
+  hasSky = true,
   refreshControl,
   contentContainerStyle,
   style,
@@ -38,13 +53,8 @@ export function Screen({
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.void }]}>
-      <View style={[styles.sky, { backgroundColor: colors.void }]}>
-        <LinearGradient colors={[colors.sky[0], colors.sky[1], colors.sky[2]]} style={StyleSheet.absoluteFill} />
-        <View style={[styles.nebulaA, { backgroundColor: colors.nebulaA }]} />
-        <View style={[styles.nebulaB, { backgroundColor: colors.nebulaB }]} />
-        <StarField />
-      </View>
+    <View style={[styles.root, { backgroundColor: hasSky ? colors.void : 'transparent' }]}>
+      {hasSky ? <SkyBackground /> : null}
       <View style={[styles.frame, style]}>
         {scroll ? (
           <ScrollView
