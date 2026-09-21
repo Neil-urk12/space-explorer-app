@@ -24,6 +24,7 @@ export type Palette = {
   onAccent: string;
   tabBar: string;
   sky: readonly [string, string, string];
+  scrim: readonly [string, string, string];
   nebulaA: string;
   nebulaB: string;
   starDot: string;
@@ -54,6 +55,7 @@ export const palettes: Record<ThemeMode, Palette> = {
     onAccent: '#05070F',
     tabBar: 'rgba(6, 8, 18, 0.92)',
     sky: ['#000000', '#050814', '#000010'],
+    scrim: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.58)', 'rgba(0, 0, 0, 0.94)'],
     nebulaA: 'rgba(88, 70, 180, 0.22)',
     nebulaB: 'rgba(40, 90, 170, 0.18)',
     starDot: '#F4F7FF',
@@ -82,6 +84,7 @@ export const palettes: Record<ThemeMode, Palette> = {
     onAccent: '#FFFFFF',
     tabBar: 'rgba(255, 255, 255, 0.9)',
     sky: ['#F7F9FD', '#E7EEF8', '#D5E3F6'],
+    scrim: ['rgba(243, 246, 252, 0)', 'rgba(243, 246, 252, 0.66)', 'rgba(243, 246, 252, 0.96)'],
     nebulaA: 'rgba(150, 130, 220, 0.2)',
     nebulaB: 'rgba(110, 160, 220, 0.18)',
     starDot: 'rgba(20, 26, 40, 0.35)',
