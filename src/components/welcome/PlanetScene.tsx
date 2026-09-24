@@ -2,7 +2,7 @@ import { PlanetRenderer } from '@/components/welcome/planetRenderer';
 import { useTheme } from '@/context/ThemeContext';
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
 import { useIsFocused } from 'expo-router';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -89,7 +89,7 @@ export function PlanetScene() {
 
   const rotateBy = useCallback((dx: number, dy: number) => rendererRef.current?.rotateBy(dx, dy, width), [width]);
   // oxlint-disable-next-line react/refs -- this callback runs on gesture events, after render
-  const pan = Gesture.Pan().runOnJS(true).onChange(({ changeX, changeY }) => rotateBy(changeX, changeY));
+  const pan = useMemo(() => Gesture.Pan().runOnJS(true).onChange(({ changeX, changeY }) => rotateBy(changeX, changeY)), [rotateBy]);
 
   useEffect(() => {
     rendererRef.current?.requestFrame();
