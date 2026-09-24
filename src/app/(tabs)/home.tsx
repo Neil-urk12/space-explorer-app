@@ -11,14 +11,22 @@ import { formatShortDate } from '@/utils/dates';
 import { consumeExploreArrival, detailsHref } from '@/utils/navigation';
 import { Image } from 'expo-image';
 import { router, useIsFocused } from 'expo-router';
+<<<<<<< HEAD
 import { useEffect, useState } from 'react';
+=======
+import { useEffect } from 'react';
+>>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
+<<<<<<< HEAD
   const { today, items, loading, refreshing, isRateLimited, error, notice, refresh } = useApod();
   const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
+=======
+  const { today, items, loading, refreshing, isRateLimited, error, refresh } = useApod();
+>>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
   const earlier = items.filter((item) => item.id !== today?.id).slice(0, 8);
   const { width } = useWindowDimensions();
   const content = Math.max(280, width - 40);

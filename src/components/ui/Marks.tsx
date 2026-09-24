@@ -64,18 +64,118 @@ function filledSvg(path: string, color: string) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(xml)}`;
 }
 
+const ICONS: Record<MarkName, { ios: SFSymbol; web: AndroidSymbol }> = {
+  home: { ios: 'house', web: 'home' },
+  gallery: { ios: 'square.grid.2x2', web: 'grid_view' },
+  search: { ios: 'magnifyingglass', web: 'search' },
+  saved: { ios: 'heart', web: 'favorite_border' },
+  share: { ios: 'square.and.arrow.up', web: 'ios_share' },
+  save: { ios: 'arrow.down.to.line', web: 'download' },
+  back: { ios: 'chevron.left', web: 'chevron_left' },
+  heart: { ios: 'heart', web: 'favorite_border' },
+  heartFill: { ios: 'heart.fill', web: 'favorite' },
+  play: { ios: 'play.fill', web: 'play_arrow' },
+  gear: { ios: 'gearshape', web: 'settings' },
+  sun: { ios: 'sun.max', web: 'light_mode' },
+  moon: { ios: 'moon', web: 'dark_mode' },
+};
+
+const HEART =
+  'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
+
+const FILLED: Partial<Record<MarkName, string>> = {
+  home: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+  gallery: 'M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z',
+  search:
+    'M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
+  saved: HEART,
+  heartFill: HEART,
+};
+
+const HEART_RED = '#E10600';
+
+const GLYPHS: Partial<Record<MarkName, { idle: 'home-outline' | 'view-grid-outline' | 'magnify' | 'heart-outline'; on: 'home' | 'view-grid' | 'magnify' | 'heart' }>> = {
+  home: { idle: 'home-outline', on: 'home' },
+  gallery: { idle: 'view-grid-outline', on: 'view-grid' },
+  search: { idle: 'magnify', on: 'magnify' },
+  saved: { idle: 'heart-outline', on: 'heart' },
+  heart: { idle: 'heart-outline', on: 'heart' },
+  heartFill: { idle: 'heart', on: 'heart' },
+};
+
+function filledSvg(path: string, color: string) {
+  const xml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="${color}" d="${path}"/></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(xml)}`;
+}
+
 export function Mark({ name, active = false, size = 18 }: { name: MarkName; active?: boolean; size?: number }) {
   const { colors } = useTheme();
   const solid = name === 'heartFill' || (active && FILLED[name]);
   const path = FILLED[name];
 
   const tint = name === 'heartFill' ? HEART_RED : colors.star;
+<<<<<<< HEAD
 
   const glyph = GLYPHS[name];
   if (glyph && (Platform.OS !== 'web' || solid)) {
     return <MaterialCommunityIcons name={solid ? glyph.on : glyph.idle} size={size} color={tint} />;
   }
 
+=======
+
+  const glyph = GLYPHS[name];
+  if (glyph && (Platform.OS !== 'web' || solid)) {
+    return <MaterialCommunityIcons name={solid ? glyph.on : glyph.idle} size={size} color={tint} />;
+  }
+
+  if (name === 'calendar') {
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View
+          style={{
+            width: size * 0.78,
+            height: size * 0.72,
+            borderWidth: stroke,
+            borderColor: color,
+            borderRadius: 2,
+            marginTop: 2,
+          }}
+        >
+          <View style={{ height: stroke + 0.5, backgroundColor: color, marginTop: size * 0.16, width: '100%' }} />
+        </View>
+        <View style={{ position: 'absolute', top: 1, left: size * 0.24, width: stroke, height: size * 0.2, backgroundColor: color }} />
+        <View style={{ position: 'absolute', top: 1, right: size * 0.24, width: stroke, height: size * 0.2, backgroundColor: color }} />
+      </View>
+    );
+  }
+
+  if (name === 'close') {
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View
+          style={{
+            position: 'absolute',
+            width: stroke,
+            height: size * 0.7,
+            backgroundColor: color,
+            transform: [{ rotate: '45deg' }],
+          }}
+        />
+        <View
+          style={{
+            position: 'absolute',
+            width: stroke,
+            height: size * 0.7,
+            backgroundColor: color,
+            transform: [{ rotate: '-45deg' }],
+          }}
+        />
+      </View>
+    );
+  }
+
+  if (name === 'back') {
+>>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
   if (Platform.OS === 'web' && solid && path) {
     return (
       <Image
