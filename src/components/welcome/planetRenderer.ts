@@ -9,7 +9,7 @@
  * Surface imagery: NASA / three.js example maps — earth_atmos_2048,
  * earth_clouds_1024, earth_specular_2048, earth_normal_2048, earth_lights_2048.
  */
-import { layout, type Palette } from '@/theme';
+import { layout, type Palette, type ThemeMode } from '@/theme';
 import { Asset } from 'expo-asset';
 import type { ExpoWebGLRenderingContext } from 'expo-gl';
 import { PixelRatio, Platform } from 'react-native';
@@ -50,6 +50,7 @@ export type SkyUniforms = {
 export type GlowUniforms = {
   uColor: Uniform<THREE.Color>;
   uSunDir: Uniform<THREE.Vector3>;
+  uStrength: Uniform<number>;
 };
 
 export type NightUniforms = {
@@ -229,6 +230,11 @@ export class PlanetRenderer {
   private readonly skyUniforms: SkyUniforms;
   private readonly glowUniforms: GlowUniforms;
   private readonly starMaterial: THREE.PointsMaterial;
+  private readonly ambient: THREE.AmbientLight;
+  private readonly sun: THREE.DirectionalLight;
+  private colors: Palette;
+  private mode: ThemeMode;
+  private atmosphere: THREE.ShaderMaterial | null = null;
   private readonly timer = new THREE.Timer();
   private readonly textures: THREE.Texture[] = [];
   private readonly owned: { dispose(): void }[] = [];
@@ -241,8 +247,10 @@ export class PlanetRenderer {
   private dirty = true;
   private disposed = false;
 
-  constructor(gl: ExpoWebGLRenderingContext, colors: Palette, reduced: boolean) {
+  constructor(gl: ExpoWebGLRenderingContext, colors: Palette, mode: ThemeMode, reduced: boolean) {
     this.gl = gl;
+    this.colors = colors;
+    this.mode = mode;
     this.reduced = reduced;
     this.width = Math.max(1, gl.drawingBufferWidth);
     this.height = Math.max(1, gl.drawingBufferHeight);
@@ -265,15 +273,17 @@ export class PlanetRenderer {
     this.glowUniforms = {
       uColor: { value: new THREE.Color(colors.spark) },
       uSunDir: { value: SUN_DIRECTION.clone() },
+      uStrength: { value: 1.35 },
     };
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.16);
-    const sun = new THREE.DirectionalLight(0xfff3e2, 2.6);
-    sun.position.copy(SUN_DIRECTION).multiplyScalar(10);
-    this.scene.add(ambient, sun);
+    this.ambient = new THREE.AmbientLight(0xffffff, 0.16);
+    this.sun = new THREE.DirectionalLight(0xfff3e2, 2.6);
+    this.sun.position.copy(SUN_DIRECTION).multiplyScalar(10);
+    this.scene.add(this.ambient, this.sun);
 
     this.scene.add(this.planet);
     this.planet.add(this.earthSpin, this.cloudSpin);
+    this.applyTheme(colors, mode);
   }
 
   /** Loads the surface maps, then attaches the planet. Call once per context. */
@@ -389,21 +399,25 @@ export class PlanetRenderer {
       fragmentShader: `
         uniform vec3 uColor;
         uniform vec3 uSunDir;
+        uniform float uStrength;
         varying vec3 vNormal;
         varying vec3 vWorldNormal;
         void main() {
           float rim = pow(clamp(0.62 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 3.0);
           float lit = clamp(dot(normalize(vWorldNormal), normalize(uSunDir)), 0.0, 1.0);
-          gl_FragColor = vec4(uColor * rim * (0.2 + 1.5 * lit) * 1.35, 1.0);
+          gl_FragColor = vec4(uColor, rim * (0.2 + 1.5 * lit) * uStrength);
           #include <colorspace_fragment>
         }
       `,
     });
+    this.atmosphere = atmosphere;
     this.owned.push(atmosphere);
     const halo = new THREE.Mesh(geometry, atmosphere);
     halo.scale.setScalar(ATMOSPHERE_RADIUS);
     halo.renderOrder = 3;
     this.planet.add(halo);
+
+    this.applyTheme(this.colors, this.mode);
 
     this.requestFrame();
   }
@@ -433,7 +447,9 @@ export class PlanetRenderer {
     this.requestFrame();
   }
 
-  applyTheme(colors: Palette) {
+  applyTheme(colors: Palette, mode: ThemeMode) {
+    this.colors = colors;
+    this.mode = mode;
     this.skyUniforms.uTop.value.copy(toColor(colors.sky[2]));
     this.skyUniforms.uMid.value.copy(toColor(colors.sky[1]));
     this.skyUniforms.uBottom.value.copy(toColor(colors.sky[0]));
@@ -441,6 +457,20 @@ export class PlanetRenderer {
     this.skyUniforms.uNebulaB.value.copy(toColor(colors.nebulaB));
     this.starMaterial.color.copy(toColor(colors.starDot));
     this.glowUniforms.uColor.value.copy(toColor(colors.spark));
+    this.glowUniforms.uStrength.value = mode === 'light' ? 2.2 : 1.35;
+    this.ambient.intensity = mode === 'light' ? 0.34 : 0.16;
+    this.sun.intensity = mode === 'light' ? 2.15 : 2.6;
+    if (this.nightUniforms) this.nightUniforms.uIntensity.value = mode === 'light' ? 1.0 : 1.4;
+    if (this.atmosphere) {
+      this.atmosphere.blending = mode === 'light' ? THREE.NormalBlending : THREE.AdditiveBlending;
+    }
+    this.requestFrame();
+  }
+
+  rotateBy(dx: number, dy: number, viewWidth: number) {
+    const radiansPerPoint = Math.PI / Math.max(viewWidth, 1);
+    this.planet.rotation.y += dx * radiansPerPoint;
+    this.planet.rotation.x = THREE.MathUtils.clamp(this.planet.rotation.x + dy * radiansPerPoint, -Math.PI / 3, Math.PI / 3);
     this.requestFrame();
   }
 
@@ -469,13 +499,14 @@ export class PlanetRenderer {
   private frameCamera() {
     const halfFov = THREE.MathUtils.degToRad(CAMERA_FOV / 2);
     const cap = Platform.OS === 'web' ? this.width : layout.phone * PixelRatio.get();
-    const target = Math.min(this.width, cap) * PLANET_WIDTH_RATIO;
+    const compact = this.height / this.width < 1.9;
+    const target = Math.min(this.width, cap) * (compact ? 0.65 : PLANET_WIDTH_RATIO);
     const distance = this.height / (Math.tan(halfFov) * target);
     this.camera.aspect = this.width / this.height;
     this.camera.position.set(0, 0, distance);
     this.camera.lookAt(0, 0, 0);
     this.camera.updateProjectionMatrix();
-    this.planet.position.y = (0.5 - PLANET_CENTER_Y) * 2 * distance * Math.tan(halfFov);
+    this.planet.position.y = (0.5 - (compact ? 0.29 : PLANET_CENTER_Y)) * 2 * distance * Math.tan(halfFov);
   }
 
   private resize() {

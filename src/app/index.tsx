@@ -5,15 +5,16 @@ import { PlanetScene } from '@/components/welcome/PlanetScene';
 import { useTheme } from '@/context/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
 export default function WelcomeScreen() {
   const { colors } = useTheme();
+  const { width, height } = useWindowDimensions();
 
   return (
     <Screen tabInset={false} padded={false} hasSky={false}>
-      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View style={StyleSheet.absoluteFill}>
         <PlanetScene />
       </View>
 
@@ -24,7 +25,11 @@ export default function WelcomeScreen() {
         style={StyleSheet.absoluteFill}
       />
 
-      <Animated.View entering={FadeInUp.delay(260).duration(700)} style={styles.copy}>
+      <Type variant="micro" color={colors.muted} pointerEvents="none" style={[styles.dragHint, height / width < 1.9 && styles.dragHintCompact]}>
+        Drag to rotate Earth
+      </Type>
+
+      <Animated.View pointerEvents="box-none" entering={FadeInUp.delay(260).duration(700)} style={styles.copy}>
         <Type variant="micro" color={colors.gold}>
           NASA · APOD Archive
         </Type>
@@ -44,6 +49,14 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  dragHint: {
+    position: 'absolute',
+    top: 56,
+    left: 24,
+  },
+  dragHintCompact: {
+    top: 16,
+  },
   copy: {
     flex: 1,
     justifyContent: 'flex-end',

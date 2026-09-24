@@ -4,6 +4,7 @@ import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
 import { useIsFocused } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -17,22 +18,24 @@ import Animated, {
  * single directional sun, with a drifting cloud layer, night-side city lights
  * and an atmospheric rim glow. See `planetRenderer` for the three.js scene.
  *
- * Decorative only — the copy stacked above it carries the meaning.
+ * The Earth can be dragged to rotate; the copy above it carries the screen's meaning.
  */
 export function PlanetScene() {
-  const { colors } = useTheme();
+  const { colors, mode } = useTheme();
   const { width, height } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
   const focused = useIsFocused();
 
   const rendererRef = useRef<PlanetRenderer | null>(null);
   const colorsRef = useRef(colors);
+  const modeRef = useRef(mode);
   const reducedRef = useRef(Boolean(reducedMotion));
   const focusedRef = useRef(focused);
   const loadedRef = useRef(false);
 
   useEffect(() => {
     colorsRef.current = colors;
+    modeRef.current = mode;
     reducedRef.current = Boolean(reducedMotion);
     focusedRef.current = focused;
   });
@@ -51,7 +54,7 @@ export function PlanetScene() {
 
     let renderer: PlanetRenderer | null = null;
     try {
-      renderer = new PlanetRenderer(gl, colorsRef.current, reducedRef.current);
+      renderer = new PlanetRenderer(gl, colorsRef.current, modeRef.current, reducedRef.current);
       rendererRef.current = renderer;
       loadedRef.current = false;
       veil.value = 1;
@@ -81,8 +84,12 @@ export function PlanetScene() {
   }, [focused, reducedMotion]);
 
   useEffect(() => {
-    rendererRef.current?.applyTheme(colors);
-  }, [colors]);
+    rendererRef.current?.applyTheme(colors, mode);
+  }, [colors, mode]);
+
+  const rotateBy = useCallback((dx: number, dy: number) => rendererRef.current?.rotateBy(dx, dy, width), [width]);
+  // oxlint-disable-next-line react/refs -- this callback runs on gesture events, after render
+  const pan = Gesture.Pan().runOnJS(true).onChange(({ changeX, changeY }) => rotateBy(changeX, changeY));
 
   useEffect(() => {
     rendererRef.current?.requestFrame();
@@ -99,15 +106,19 @@ export function PlanetScene() {
   );
 
   return (
-    <View
-      accessible={false}
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      pointerEvents="none"
-      style={StyleSheet.absoluteFill}
-    >
-      <GLView onContextCreate={onContextCreate} style={StyleSheet.absoluteFill} />
-      <Animated.View style={[StyleSheet.absoluteFill, veilStyle, { backgroundColor: colors.void }]} />
-    </View>
+    <GestureDetector gesture={pan}>
+      <View
+        accessible
+        accessibilityRole="adjustable"
+        accessibilityLabel="Earth globe"
+        accessibilityHint="Drag to rotate and tilt the globe"
+        accessibilityActions={[{ name: 'increment', label: 'Rotate right' }, { name: 'decrement', label: 'Rotate left' }]}
+        onAccessibilityAction={({ nativeEvent }) => rotateBy(nativeEvent.actionName === 'increment' ? 32 : -32, 0)}
+        style={StyleSheet.absoluteFill}
+      >
+        <GLView pointerEvents="none" onContextCreate={onContextCreate} style={StyleSheet.absoluteFill} />
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, veilStyle, { backgroundColor: colors.void }]} />
+      </View>
+    </GestureDetector>
   );
 }
