@@ -4,7 +4,6 @@ import { Screen } from '@/components/ui/Screen';
 import { Type } from '@/components/ui/Type';
 import { useApod } from '@/context/ApodContext';
 import { useTheme } from '@/context/ThemeContext';
-import { CATALOG } from '@/data/catalog';
 import { CategoryFilter, MediaFilter, SpaceItem } from '@/types/space';
 import { formatHudDate } from '@/utils/dates';
 import { memo, useCallback, useDeferredValue, useMemo, useState } from 'react';
@@ -72,22 +71,13 @@ const SearchHeader = memo(function SearchHeader({
 });
 
 export default function SearchScreen() {
-  const { items: liveItems } = useApod();
+  const { allItems } = useApod();
   const [query, setQuery] = useState('');
   const [media, setMedia] = useState<MediaFilter>('all');
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const deferredQuery = useDeferredValue(query);
-
-  const allItems = useMemo(() => {
-    const map = new Map<string, SpaceItem>();
-    liveItems.forEach((item) => map.set(item.id, item));
-    CATALOG.forEach((item) => {
-      if (!map.has(item.id)) map.set(item.id, item);
-    });
-    return Array.from(map.values());
-  }, [liveItems]);
 
   const availableDates = useMemo(() => new Set(allItems.map((item) => item.date)), [allItems]);
 

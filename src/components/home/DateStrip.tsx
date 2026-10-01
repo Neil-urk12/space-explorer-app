@@ -1,5 +1,4 @@
 import { Type } from '@/components/ui/Type';
-import { useApod } from '@/context/ApodContext';
 import { useTheme } from '@/context/ThemeContext';
 import { radius } from '@/theme';
 import { SpaceItem } from '@/types/space';
@@ -8,10 +7,8 @@ import { detailsHref } from '@/utils/navigation';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-export function DateStrip({ activeId, items: propItems }: { activeId?: string; items?: SpaceItem[] }) {
+export function DateStrip({ activeId, items }: { activeId?: string; items: SpaceItem[] }) {
   const { colors } = useTheme();
-  const { items: apodItems } = useApod();
-  const items = propItems && propItems.length > 0 ? propItems : apodItems;
 
   return (
     <View>

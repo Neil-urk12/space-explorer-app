@@ -2,8 +2,6 @@ export type ThemeMode = 'dark' | 'light';
 
 export type Palette = {
   void: string;
-  deep: string;
-  ink: string;
   panel: string;
   panelSolid: string;
   panelHot: string;
@@ -14,8 +12,6 @@ export type Palette = {
   faint: string;
   spark: string;
   sparkDim: string;
-  nebula: string;
-  nebulaDim: string;
   aurora: string;
   auroraDim: string;
   gold: string;
@@ -33,8 +29,6 @@ export type Palette = {
 export const palettes: Record<ThemeMode, Palette> = {
   dark: {
     void: '#000000',
-    deep: '#05070F',
-    ink: '#080B16',
     panel: 'rgba(10, 14, 28, 0.78)',
     panelSolid: '#0C1020',
     panelHot: '#12182C',
@@ -45,8 +39,6 @@ export const palettes: Record<ThemeMode, Palette> = {
     faint: 'rgba(214, 224, 255, 0.34)',
     spark: '#9EC5FF',
     sparkDim: 'rgba(158, 197, 255, 0.16)',
-    nebula: '#8B7CFF',
-    nebulaDim: 'rgba(139, 124, 255, 0.18)',
     aurora: '#7DFFC4',
     auroraDim: 'rgba(125, 255, 196, 0.14)',
     gold: '#FFD78A',
@@ -62,8 +54,6 @@ export const palettes: Record<ThemeMode, Palette> = {
   },
   light: {
     void: '#F3F6FC',
-    deep: '#E8EEF8',
-    ink: '#DDE6F4',
     panel: 'rgba(255, 255, 255, 0.82)',
     panelSolid: '#FFFFFF',
     panelHot: '#E4EAF6',
@@ -74,8 +64,6 @@ export const palettes: Record<ThemeMode, Palette> = {
     faint: 'rgba(20, 26, 40, 0.4)',
     spark: '#3D6FD9',
     sparkDim: 'rgba(61, 111, 217, 0.14)',
-    nebula: '#6B5CDB',
-    nebulaDim: 'rgba(107, 92, 219, 0.12)',
     aurora: '#1F9A6B',
     auroraDim: 'rgba(31, 154, 107, 0.12)',
     gold: '#B7791F',
@@ -91,23 +79,11 @@ export const palettes: Record<ThemeMode, Palette> = {
   },
 };
 
-export const colors = palettes.dark;
-
 export const fonts = {
-  light: 'SpaceGrotesk_300Light',
   regular: 'SpaceGrotesk_400Regular',
   medium: 'SpaceGrotesk_500Medium',
   semibold: 'SpaceGrotesk_600SemiBold',
   bold: 'SpaceGrotesk_700Bold',
-} as const;
-
-export const space = {
-  xs: 6,
-  sm: 10,
-  md: 16,
-  lg: 24,
-  xl: 36,
-  xxl: 56,
 } as const;
 
 export const radius = {

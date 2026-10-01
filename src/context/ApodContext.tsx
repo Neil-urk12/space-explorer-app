@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 type ApodContextValue = {
   items: SpaceItem[];
+  allItems: SpaceItem[];
   today: SpaceItem;
   recents: SpaceItem[];
   loading: boolean;
@@ -85,12 +86,22 @@ export function ApodProvider({ children }: { children: ReactNode }) {
     [items],
   );
 
+  const allItems = useMemo(() => {
+    const map = new Map<string, SpaceItem>();
+    items.forEach((item) => map.set(item.id, item));
+    CATALOG.forEach((item) => {
+      if (!map.has(item.id)) map.set(item.id, item);
+    });
+    return Array.from(map.values());
+  }, [items]);
+
   const today = useMemo(() => items[0] ?? TODAY, [items]);
   const recents = useMemo(() => items.slice(1, 8), [items]);
 
   const value = useMemo(
     () => ({
       items,
+      allItems,
       today,
       recents,
       loading,
@@ -102,7 +113,7 @@ export function ApodProvider({ children }: { children: ReactNode }) {
       getItemById,
       getNeighbors,
     }),
-    [items, today, recents, loading, refreshing, isFallback, isRateLimited, error, refresh, getItemById, getNeighbors],
+    [items, allItems, today, recents, loading, refreshing, isFallback, isRateLimited, error, refresh, getItemById, getNeighbors],
   );
 
   return <ApodContext.Provider value={value}>{children}</ApodContext.Provider>;

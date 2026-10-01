@@ -1,4 +1,4 @@
-import { CategoryFilter, MediaFilter, SpaceItem } from '@/types/space';
+import { SpaceItem } from '@/types/space';
 
 const img = (id: string, width = 1400) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=80`;
@@ -180,23 +180,6 @@ export const TODAY = CATALOG[0];
 
 export function getById(id: string): SpaceItem | undefined {
   return CATALOG.find((item) => item.id === id);
-}
-
-export function neighbors(id: string): { prev?: SpaceItem; next?: SpaceItem } {
-  const index = CATALOG.findIndex((item) => item.id === id);
-  if (index < 0) return {};
-  return { prev: CATALOG[index + 1], next: CATALOG[index - 1] };
-}
-
-export function filterCatalog(query: string, media: MediaFilter, category: CategoryFilter, date?: string): SpaceItem[] {
-  const needle = query.trim().toLowerCase();
-  return CATALOG.filter((item) => {
-    if (date && item.date !== date) return false;
-    if (media !== 'all' && item.mediaType !== media) return false;
-    if (category !== 'all' && item.category !== category) return false;
-    if (!needle) return true;
-    return `${item.title} ${item.explanation} ${item.credit}`.toLowerCase().includes(needle);
-  });
 }
 
 export const CATALOG_DATES = new Set(CATALOG.map((item) => item.date));

@@ -3,7 +3,6 @@ import { Pill } from '@/components/ui/Chrome';
 import { Screen } from '@/components/ui/Screen';
 import { Type } from '@/components/ui/Type';
 import { useApod } from '@/context/ApodContext';
-import { CATALOG } from '@/data/catalog';
 import { useTheme } from '@/context/ThemeContext';
 import { CategoryFilter, SpaceItem } from '@/types/space';
 import { useMemo, useState } from 'react';
@@ -20,17 +19,8 @@ const FILTERS: { id: CategoryFilter; label: string }[] = [
 
 export default function GalleryScreen() {
   const { colors } = useTheme();
-  const { items: liveItems } = useApod();
+  const { allItems } = useApod();
   const [filter, setFilter] = useState<CategoryFilter>('all');
-
-  const allItems = useMemo(() => {
-    const map = new Map<string, SpaceItem>();
-    liveItems.forEach((item) => map.set(item.id, item));
-    CATALOG.forEach((item) => {
-      if (!map.has(item.id)) map.set(item.id, item);
-    });
-    return Array.from(map.values());
-  }, [liveItems]);
 
   const visible = useMemo(
     () => allItems.filter((item) => filter === 'all' || item.category === filter),
