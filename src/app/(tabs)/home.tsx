@@ -11,13 +11,14 @@ import { formatShortDate } from '@/utils/dates';
 import { consumeExploreArrival, detailsHref } from '@/utils/navigation';
 import { Image } from 'expo-image';
 import { router, useIsFocused } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
-  const { today, items, loading, refreshing, isRateLimited, error, refresh } = useApod();
+  const { today, items, loading, refreshing, isRateLimited, error, notice, refresh } = useApod();
+  const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
   const earlier = items.filter((item) => item.id !== today?.id).slice(0, 8);
   const { width } = useWindowDimensions();
   const content = Math.max(280, width - 40);
@@ -63,7 +64,7 @@ export default function HomeScreen() {
               API Rate Limit Notice
             </Type>
             <Type variant="body" style={{ marginTop: 4, fontSize: 13, lineHeight: 18 }}>
-              NASA DEMO_KEY hourly limit reached. Displaying cached / offline archive.
+              NASA API hourly limit reached. Displaying cached / offline archive.
             </Type>
           </View>
           <Pill label="Retry" onPress={refresh} />
@@ -84,6 +85,24 @@ export default function HomeScreen() {
             </Type>
           </View>
           <Pill label="Retry" onPress={refresh} />
+        </View>
+      ) : notice && notice !== dismissedNotice ? (
+        <View
+          accessibilityLiveRegion="polite"
+          style={[
+            styles.banner,
+            { backgroundColor: colors.panel, borderColor: colors.hairline, borderLeftColor: colors.spark, borderLeftWidth: 3 },
+          ]}
+        >
+          <View style={{ flex: 1 }}>
+            <Type variant="micro" color={colors.spark}>
+              Switched Source
+            </Type>
+            <Type variant="body" style={{ marginTop: 4, fontSize: 13, lineHeight: 18 }}>
+              {notice}
+            </Type>
+          </View>
+          <Pill label="OK" onPress={() => setDismissedNotice(notice)} />
         </View>
       ) : null}
 
