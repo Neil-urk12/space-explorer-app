@@ -3,8 +3,15 @@ import { Category, SpaceItem } from '@/types/space';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CACHE_STORAGE_KEY = '@space_explorer/apod_cache';
-const API_KEY = process.env.EXPO_PUBLIC_NASA_API_KEY || 'DEMO_KEY';
+const API_KEY = process.env.EXPO_PUBLIC_NASA_API_KEY?.trim() ?? '';
+const HAS_API_KEY = API_KEY.length > 0 && API_KEY !== 'DEMO_KEY';
+const MISSING_KEY_ERROR = 'NASA API key missing. Set EXPO_PUBLIC_NASA_API_KEY in .env and restart with `npx expo start -c`.';
 const BASE_URL = 'https://api.nasa.gov/planetary/apod';
+// APOD moved to science.nasa.gov; its WordPress feed is the fallback source.
+// Past this, treat api.nasa.gov as not working well and switch to science.nasa.gov.
+const API_TIMEOUT_MS = 2000;
+const SCIENCE_URL = 'https://science.nasa.gov/wp-json/wp/v2/image-article';
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 const VIDEO_PLACEHOLDER = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=520&q=80';
 // ponytail: one global queue; add per-key locking only if cache write throughput matters.
 let cacheWriteQueue: Promise<void> = Promise.resolve();
@@ -28,6 +35,8 @@ export interface ApodFetchResult {
   isFallback: boolean;
   isRateLimited: boolean;
   error?: string;
+  // Set when api.nasa.gov failed and science.nasa.gov supplied the items instead.
+  notice?: string;
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -44,10 +53,16 @@ function isOptionalString(value: unknown): value is string | undefined {
   return value === undefined || typeof value === 'string';
 }
 
+// api.nasa.gov still scrapes the retired apod.nasa.gov pages and returns the site logo for every date.
+function isPlaceholderApod(raw: Partial<NasaApodRaw>): boolean {
+  return [raw.url, raw.hdurl].some((u) => typeof u === 'string' && u.includes('/nasa-logo'));
+}
+
 function isValidNasaApodRaw(value: unknown, expectedDate?: string): value is NasaApodRaw {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const raw = value as Partial<NasaApodRaw>;
   return (
+    !isPlaceholderApod(raw) &&
     isIsoDate(raw.date) &&
     (!expectedDate || raw.date === expectedDate) &&
     isNonEmptyString(raw.explanation) &&
@@ -65,6 +80,7 @@ export function isValidSpaceItem(value: unknown): value is SpaceItem {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const item = value as Partial<SpaceItem>;
   return (
+    !isPlaceholderApod({ url: item.url, hdurl: item.hdurl }) &&
     isIsoDate(item.id) &&
     item.id === item.date &&
     isNonEmptyString(item.title) &&
@@ -145,15 +161,148 @@ export async function saveCachedApodItems(newItems: SpaceItem[]): Promise<void> 
   return cacheWriteQueue;
 }
 
+interface SciencePost {
+  slug?: string;
+  title?: { rendered?: string };
+  content?: { rendered?: string };
+  _embedded?: { 'wp:featuredmedia'?: { source_url?: string }[] };
+}
+
+function decodeHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&hellip;/g, '…')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+([.,;:!?)])/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Slugs look like "apod-2026-september-30-arp-78-peculiar-galaxy-in-aries".
+function dateFromSlug(slug: string): string | null {
+  const match = /^apod-(\d{4})-([a-z]+)-(\d{1,2})-/.exec(slug);
+  if (!match) return null;
+  const month = MONTHS.indexOf(match[2]);
+  if (month < 0) return null;
+  const date = `${match[1]}-${String(month + 1).padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+  return isIsoDate(date) ? date : null;
+}
+
+// The feed's per-size URLs all point at the full image, so ask the image service for a width instead.
+function sizedImage(url: string, width: number): string {
+  return `${url}${url.includes('?') ? '&' : '?'}w=${width}&fit=clip`;
+}
+
+function mapSciencePost(post: SciencePost): SpaceItem | null {
+  const date = dateFromSlug(post.slug ?? '');
+  const full = post._embedded?.['wp:featuredmedia']?.[0]?.source_url;
+  if (!date || !full) return null;
+
+  const title = decodeHtml(post.title?.rendered ?? '').replace(/^APOD:\s*\d{4} \w+ \d{1,2}\s*[–-]\s*/, '');
+  const text = decodeHtml(post.content?.rendered ?? '');
+  // Most posts label the body "Explanation:"; the rest start it right after the title.
+  const titleEnd = title ? text.indexOf(title) : -1;
+  const body = text.includes('Explanation:')
+    ? text.slice(text.indexOf('Explanation:') + 'Explanation:'.length)
+    : titleEnd >= 0
+      ? text.slice(titleEnd + title.length)
+      : '';
+  const explanation = /^\s*(.*?)\s*(?:Tomorrow['’]s picture|APOD['’]s (?:email|main)|\bDate [A-Z][a-z]+ \d|\bCredit\b|$)/
+    .exec(body)?.[1]
+    ?.trim();
+  const credit = /Credit(?:\s*&\s*Copyright)?\s*:?\s*(.*?)\s*Authors\b/.exec(text)?.[1];
+  if (!title || !explanation) return null;
+
+  return {
+    id: date,
+    date,
+    title,
+    explanation,
+    credit: credit || 'NASA',
+    url: sizedImage(full, 1600),
+    hdurl: full,
+    thumbnail: sizedImage(full, 600),
+    mediaType: 'image',
+    category: inferCategory(title, explanation),
+  };
+}
+
+async function fetchSciencePosts(search: string, perPage: number): Promise<SpaceItem[]> {
+  const url = `${SCIENCE_URL}?search=${encodeURIComponent(search)}&per_page=${perPage}&_embed=wp:featuredmedia&_fields=slug,title,content,_links,_embedded`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`NASA Science error: ${response.status}`);
+  const data: unknown = await response.json();
+  if (!Array.isArray(data)) throw new Error('Invalid NASA Science response');
+  const byDate = new Map<string, SpaceItem>();
+  for (const post of data as SciencePost[]) {
+    const item = mapSciencePost(post);
+    if (item && isValidSpaceItem(item) && !byDate.has(item.id)) byDate.set(item.id, item);
+  }
+  return Array.from(byDate.values()).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+// api.nasa.gov is the primary source; science.nasa.gov takes over when it fails, stalls, or sends placeholders.
 export async function fetchRecentApod(days: number = 8): Promise<ApodFetchResult> {
+  const apiResult = await fetchRecentFromApi(days);
+  if (!apiResult.isFallback) return apiResult;
+
+  try {
+    const items = (await fetchSciencePosts('apod', Math.min(days, 50))).slice(0, days);
+    if (items.length > 0) {
+      await saveCachedApodItems(items);
+      const reason = (apiResult.error ?? '').replace(/\s*Showing cached \/ offline archive\.?$/, '').replace(/\.$/, '');
+      return {
+        items,
+        isFallback: false,
+        isRateLimited: false,
+        notice: `api.nasa.gov isn't working${reason ? `: ${reason}` : ''}. Switched to science.nasa.gov.`,
+      };
+    }
+  } catch {
+    // Both sources failed; keep the api.nasa.gov error and fallback items.
+  }
+  return apiResult;
+}
+
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } catch (err: any) {
+    if (controller.signal.aborted) throw new Error(`NASA API did not respond within ${timeoutMs / 1000}s`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchRecentFromApi(days: number): Promise<ApodFetchResult> {
+
   // Let NASA choose the end date; include an extra UTC day for timezone boundaries.
   const start = new Date();
   start.setUTCDate(start.getUTCDate() - days);
   const startDate = start.toISOString().slice(0, 10);
+  if (!HAS_API_KEY) {
+    const cached = await getCachedApodItems();
+    return {
+      items: cached.length > 0 ? cached : CATALOG,
+      isFallback: true,
+      isRateLimited: false,
+      error: MISSING_KEY_ERROR,
+    };
+  }
   const url = `${BASE_URL}?api_key=${encodeURIComponent(API_KEY)}&start_date=${encodeURIComponent(startDate)}&thumbs=true`;
 
   try {
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url, API_TIMEOUT_MS);
 
     if (response.status === 429) {
       const cached = await getCachedApodItems();
@@ -161,7 +310,7 @@ export async function fetchRecentApod(days: number = 8): Promise<ApodFetchResult
         items: cached.length > 0 ? cached : CATALOG,
         isFallback: true,
         isRateLimited: true,
-        error: 'NASA API rate limit reached (DEMO_KEY). Showing cached / offline archive.',
+        error: 'NASA API rate limit reached. Showing cached / offline archive.',
       };
     }
 
@@ -190,7 +339,9 @@ export async function fetchRecentApod(days: number = 8): Promise<ApodFetchResult
       .map(mapApodToSpaceItem)
       .reverse()
       .slice(0, days); // Newest first
-    if (mapped.length === 0) throw new Error('Invalid NASA APOD response');
+    if (mapped.length === 0) {
+      throw new Error('NASA APOD API is returning placeholder data (logo only). Showing cached / offline archive.');
+    }
 
     await saveCachedApodItems(mapped);
 
@@ -212,14 +363,32 @@ export async function fetchRecentApod(days: number = 8): Promise<ApodFetchResult
 
 export async function fetchApodByDate(date: string): Promise<SpaceItem | null> {
   if (!isIsoDate(date)) return null;
+  return (await fetchApiByDate(date)) ?? (await fetchScienceByDate(date));
+}
+
+async function fetchApiByDate(date: string): Promise<SpaceItem | null> {
+  if (!HAS_API_KEY) return null;
   const url = `${BASE_URL}?api_key=${encodeURIComponent(API_KEY)}&date=${encodeURIComponent(date)}&thumbs=true`;
 
   try {
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url, API_TIMEOUT_MS);
     if (!response.ok) return null;
     const data: unknown = await response.json();
     if (!isValidNasaApodRaw(data, date)) return null;
     const item = mapApodToSpaceItem(data);
+    await saveCachedApodItems([item]);
+    return item;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchScienceByDate(date: string): Promise<SpaceItem | null> {
+  try {
+    const [year, month, day] = date.split('-').map(Number);
+    const posts = await fetchSciencePosts(`APOD: ${year} ${MONTHS[month - 1]} ${day}`, 5);
+    const item = posts.find((post) => post.date === date);
+    if (!item) return null;
     await saveCachedApodItems([item]);
     return item;
   } catch {
