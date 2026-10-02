@@ -12,6 +12,7 @@ type ApodContextValue = {
   isFallback: boolean;
   isRateLimited: boolean;
   error: string | null;
+  notice: string | null;
   refresh: () => Promise<void>;
   getItemById: (id: string) => SpaceItem | undefined;
   getNeighbors: (id: string) => { prev?: SpaceItem; next?: SpaceItem };
@@ -26,6 +27,7 @@ export function ApodProvider({ children }: { children: ReactNode }) {
   const [isFallback, setIsFallback] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const loadData = useCallback(async (isRefresh = false) => {
     try {
@@ -42,6 +44,7 @@ export function ApodProvider({ children }: { children: ReactNode }) {
       setIsFallback(result.isFallback);
       setIsRateLimited(result.isRateLimited);
       setError(result.error ?? null);
+      setNotice(result.notice ?? null);
     } catch (err: any) {
       setIsFallback(true);
       setError(err?.message || 'Failed to load astronomy pictures');
@@ -98,11 +101,12 @@ export function ApodProvider({ children }: { children: ReactNode }) {
       isFallback,
       isRateLimited,
       error,
+      notice,
       refresh,
       getItemById,
       getNeighbors,
     }),
-    [items, today, recents, loading, refreshing, isFallback, isRateLimited, error, refresh, getItemById, getNeighbors],
+    [items, today, recents, loading, refreshing, isFallback, isRateLimited, error, notice, refresh, getItemById, getNeighbors],
   );
 
   return <ApodContext.Provider value={value}>{children}</ApodContext.Provider>;
