@@ -47,13 +47,6 @@ const SearchHeader = memo(function SearchHeader({
         onSelectDate={onSelectDate}
         availableDates={availableDates}
       />
-<<<<<<< HEAD
-=======
-
-      <Type variant="micro" color={colors.spark} style={{ marginTop: 20 }}>
-        {selectedDate ? `Locked · ${formatHudDate(selectedDate)} (${matchCount})` : `Matches · ${matchCount}`}
-      </Type>
->>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
       <View style={styles.photoHead}>
         <View style={[styles.photoRule, { backgroundColor: colors.star }]} />
         <Type variant="micro" color={colors.gold}>
@@ -126,12 +119,6 @@ export default function SearchScreen() {
         availableDates={availableDates}
       />
     ),
-<<<<<<< HEAD
-=======
-    [query, media, category, selectedDate, availableDates, matches.length, allItems],
-      />
-    ),
->>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
     [query, category, selectedDate, availableDates, chooseDate],
   );
 

@@ -2,17 +2,6 @@ import { CategoryRail } from '@/components/navigation/CategoryRail';
 import { Hairline } from '@/components/ui/Chrome';
 import { Type } from '@/components/ui/Type';
 import { useTheme } from '@/context/ThemeContext';
-<<<<<<< HEAD
-=======
-import { fonts, radius } from '@/theme';
-import { CategoryFilter, MediaFilter, SpaceItem } from '@/types/space';
-import { formatHudDate } from '@/utils/dates';
-import { memo, useState } from 'react';
-import { CategoryRail } from '@/components/navigation/CategoryRail';
-import { Hairline } from '@/components/ui/Chrome';
-import { Type } from '@/components/ui/Type';
-import { useTheme } from '@/context/ThemeContext';
->>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
 import { fonts } from '@/theme';
 import { CategoryFilter } from '@/types/space';
 import { daysInMonth, formatHudDate, formatMonthYear, parseIsoDate, toIsoDate } from '@/utils/dates';
@@ -36,10 +25,6 @@ type Props = {
   selectedDate: string | null;
   onSelectDate: (value: string | null) => void;
   availableDates?: Set<string>;
-<<<<<<< HEAD
-=======
-  items?: SpaceItem[];
->>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
   filters?: boolean;
   calendar?: boolean;
 };
@@ -67,14 +52,6 @@ export const SearchPanel = memo(function SearchPanel({
   calendar = true,
 }: Props) {
   const { colors } = useTheme();
-<<<<<<< HEAD
-=======
-  const [sheetVisible, setSheetVisible] = useState(false);
-  filters = true,
-  calendar = true,
-}: Props) {
-  const { colors } = useTheme();
->>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
   const now = new Date();
   const currentMonthIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   const [monthIso, setMonthIso] = useState(currentMonthIso);
@@ -113,63 +90,6 @@ export const SearchPanel = memo(function SearchPanel({
 
           <View style={styles.rails}>
             <CategoryRail items={CATS} value={category} onChange={onCategory} pinFirst />
-<<<<<<< HEAD
-=======
-          </View>
-        </>
-      ) : null}
-
-      <Hairline style={{ marginVertical: 16 }} />
-
-      {/* Observation Date Filter Trigger */}
-      <View
-        style={[
-          styles.dateTrigger,
-          {
-            borderColor: selectedDate ? colors.spark : colors.hairline,
-            backgroundColor: selectedDate ? colors.sparkDim : colors.panel,
-          },
-        ]}
-      >
-        <Pressable
-          onPress={() => setSheetVisible(true)}
-          accessibilityRole="button"
-          accessibilityLabel={
-            selectedDate
-              ? `Observation date locked to ${formatHudDate(selectedDate)}. Tap to change date.`
-              : 'Lock observation date. Tap to open calendar archive.'
-          }
-          style={({ pressed }) => [
-            styles.dateTriggerButton,
-            !selectedDate && styles.dateTriggerButtonWithArrow,
-            pressed && styles.pressed,
-          ]}
-        >
-          <View style={styles.dateTriggerLeft}>
-            <View
-              style={[
-                styles.dateIconWrap,
-                {
-                  backgroundColor: selectedDate ? colors.spark : colors.panelHot,
-                  borderColor: selectedDate ? colors.spark : colors.hairline,
-                },
-              ]}
-            >
-              <Mark name="calendar" active={Boolean(selectedDate)} size={16} />
-            </View>
-            <View style={styles.dateTriggerTexts}>
-              <Type variant="micro" color={selectedDate ? colors.spark : colors.gold}>
-                {selectedDate ? 'LOCKED OBSERVATION DATE' : 'OBSERVATION DATE'}
-              </Type>
-              <Type
-                variant="label"
-                color={selectedDate ? colors.spark : colors.star}
-                style={{ fontFamily: selectedDate ? fonts.semibold : fonts.regular, marginTop: 2 }}
-              >
-                {selectedDate ? formatHudDate(selectedDate) : 'Any date in archive (Tap to lock)'}
-              </Type>
-            </View>
->>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
           </View>
         </>
       ) : null}
@@ -204,47 +124,6 @@ export const SearchPanel = memo(function SearchPanel({
             </Type>
           </Pressable>
 
-<<<<<<< HEAD
-=======
-      <DateFilterSheet
-        visible={sheetVisible}
-        onClose={() => setSheetVisible(false)}
-        selectedDate={selectedDate}
-        onSelectDate={onSelectDate}
-        availableDates={availableDates}
-        items={items}
-      />
-      {calendar ? (
-        <>
-          <Hairline style={{ marginTop: filters ? 8 : 0, marginBottom: 16 }} />
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={selectedDate ? `Locked to ${formatHudDate(selectedDate)}` : 'Jump to a night'}
-            accessibilityState={{ expanded: open }}
-            onPress={() => setOpen((value) => !value)}
-            style={[
-              styles.trigger,
-              {
-                borderColor: selectedDate || open ? colors.hairlineStrong : colors.hairline,
-                backgroundColor: colors.panel,
-              },
-            ]}
-          >
-            <View style={styles.triggerCopy}>
-              <Type variant="micro" color={colors.gold}>
-                {selectedDate ? 'Locked night' : 'Date lock'}
-              </Type>
-              <Type variant="title" style={styles.triggerTitle}>
-                {selectedDate ? formatHudDate(selectedDate) : 'Jump to a night'}
-              </Type>
-            </View>
-            <Type variant="label" color={colors.spark}>
-              {open ? 'Hide' : selectedDate ? 'Change' : 'Open'}
-            </Type>
-          </Pressable>
-
->>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
           {selectedDate && !open ? (
             <Pressable onPress={() => onSelectDate(null)} style={[styles.clear, { borderBottomColor: colors.spark }]}>
               <Type variant="micro" color={colors.spark}>
@@ -346,8 +225,6 @@ const styles = StyleSheet.create({
   },
   rails: {
     marginTop: 16,
-<<<<<<< HEAD
-=======
   },
   trigger: {
     flexDirection: 'row',
@@ -362,39 +239,6 @@ const styles = StyleSheet.create({
   triggerCopy: {
     flex: 1,
     gap: 4,
-  },
-  triggerTitle: {
-    fontSize: 18,
-    lineHeight: 22,
-  },
-  sheet: {
-    marginTop: 16,
->>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
-  },
-  trigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 16,
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
-<<<<<<< HEAD
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-=======
-    minHeight: 56,
-    marginBottom: 16,
->>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
-  },
-  triggerCopy: {
-    flex: 1,
-<<<<<<< HEAD
-    gap: 4,
-=======
-    paddingLeft: 14,
-    paddingVertical: 12,
-    marginBottom: 8,
->>>>>>> 230a9b3 (feat: refresh Space Explorer UI, branding, and navigation)
   },
   triggerTitle: {
     fontSize: 18,
@@ -427,24 +271,6 @@ const styles = StyleSheet.create({
     padding: 3,
     alignItems: 'center',
     justifyContent: 'center',
-  day: {
-    width: `${100 / 7}%`,
-    height: 38,
-    padding: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mark: {
-    flex: 1,
-    alignSelf: 'stretch',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  marked: {
-    borderColor: '#FFFFFF',
   },
   mark: {
     flex: 1,
